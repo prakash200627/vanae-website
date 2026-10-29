@@ -1,31 +1,77 @@
 import type { Metadata } from "next";
+import { Cormorant_Garamond, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import CustomCursor from "@/components/CustomCursor";
+import { SITE_ORIGIN } from "@/lib/siteUrl";
 
+/**
+ * Rooted Living typography (Phase 1):
+ * - Cormorant Garamond — display / editorial headings
+ * - Hanken Grotesk — body, nav, controls, labels
+ * Loaded via next/font (no CSS @import) with swap for readable first paint.
+ */
+const displayFont = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const bodyFont = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+/**
+ * Metadata avoids unverified tower/floor/clubhouse/amenity counts.
+ * Canonical host remains provisional until the production domain is confirmed.
+ */
 export const metadata: Metadata = {
-  title: "VANAE | The Art of Rooted Living | 3 & 4 BHK Luxury Residences in Kollur, Hyderabad",
+  metadataBase: new URL(SITE_ORIGIN),
+  title: {
+    default: "VANAE | The Art of Rooted Living | Kollur, Hyderabad",
+    template: "%s | VANAE",
+  },
   description:
-    "Planted in the rapidly evolving landscape of Kollur, by ORR Exit 2, Hyderabad. Vanae is a unique residential marvel 36 floors high across 6 towers with 11-foot-high ceilings, 1,00,000 sqft clubhouse, and over 50 curated lifestyle amenities.",
-  keywords: [
-    "VANAE",
-    "VANAE Residences",
-    "Kollur Luxury Apartments",
-    "ORR Exit 2 Hyderabad",
-    "3 BHK Flats Kollur",
-    "4 BHK Flats Kollur",
-    "Luxury Residences Hyderabad",
-    "The Art of Rooted Living",
-  ],
+    "VANAE is a luxury residential address envisioned in Kollur, near ORR Exit 2, Hyderabad — where architecture and landscape are shaped as one story of rooted living.",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "VANAE | The Art of Rooted Living | 3 & 4 BHK Residences in Kollur",
+    type: "website",
+    url: "/",
+    siteName: "VANAE",
+    locale: "en_IN",
+    title: "VANAE | The Art of Rooted Living | Kollur, Hyderabad",
     description:
-      "A new skyline is taking root. Planted in Kollur by ORR Exit 2. 36 floors, 6 towers, 11-foot-high ceilings, and 1,00,000 sqft clubhouse.",
-    images: ["/assets/vanae-logo.jpg"],
+      "Rooted living in Kollur, near ORR Exit 2, Hyderabad. Architecture and landscape, one story.",
+    images: [
+      {
+        url: "/assets/images/hero-poster.jpg",
+        width: 1920,
+        height: 1080,
+        alt: "VANAE — Kollur, Hyderabad",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VANAE | The Art of Rooted Living | Kollur, Hyderabad",
+    description:
+      "Rooted living in Kollur, near ORR Exit 2, Hyderabad. Architecture and landscape, one story.",
+    images: ["/assets/images/hero-poster.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
   icons: {
-    icon: "/assets/vanae-logo.jpg",
-    shortcut: "/assets/vanae-logo.jpg",
+    icon: [{ url: "/assets/logo.svg", type: "image/svg+xml" }],
+    shortcut: "/assets/logo.svg",
     apple: "/assets/vanae-logo.jpg",
   },
 };
@@ -36,8 +82,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased bg-[#0f0708] text-white selection:bg-gold selection:text-black">
+    <html
+      lang="en"
+      className={`${displayFont.variable} ${bodyFont.variable}`}
+    >
+      <body className="antialiased bg-ink text-ivory font-sans selection:bg-gold selection:text-ink">
         <SmoothScroll>
           <CustomCursor />
           {children}

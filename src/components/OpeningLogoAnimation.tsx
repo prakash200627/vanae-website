@@ -25,16 +25,21 @@ export default function OpeningLogoAnimation() {
   };
 
   useEffect(() => {
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) {
+      finishAnimation();
+      return;
+    }
+
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     const safetyTimer = setTimeout(() => {
       finishAnimation();
     }, 4500);
-
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
@@ -101,41 +106,32 @@ export default function OpeningLogoAnimation() {
           ease: "power2.out",
         });
 
-      if (prefersReducedMotion) {
-        // Fallback for reduced motion: gentle simple fade
-        tl.to(panelRef.current, {
-          opacity: 0,
-          duration: 0.6,
-          ease: "power2.out",
-        });
-      } else {
-        // Step 3, 4, 6: Sophisticated 3D flip transition around vertical axis
-        if (lightingRef.current) {
-          tl.to(
-            lightingRef.current,
-            {
-              opacity: 0.45,
-              duration: 1.15,
-              ease: "power2.inOut",
-            },
-            "<"
-          );
-        }
-
-        // Panel 3D vertical axis rotation reveal
+      // Step 3, 4, 6: Sophisticated 3D flip transition around vertical axis
+      if (lightingRef.current) {
         tl.to(
-          panelRef.current,
+          lightingRef.current,
           {
-            rotateY: -72,
-            z: -280,
-            scale: 0.95,
-            opacity: 0,
+            opacity: 0.45,
             duration: 1.15,
-            ease: "power3.inOut",
+            ease: "power2.inOut",
           },
           "<"
         );
       }
+
+      // Panel 3D vertical axis rotation reveal
+      tl.to(
+        panelRef.current,
+        {
+          rotateY: -72,
+          z: -280,
+          scale: 0.95,
+          opacity: 0,
+          duration: 1.15,
+          ease: "power3.inOut",
+        },
+        "<"
+      );
     }, wrapperRef);
 
     return () => {

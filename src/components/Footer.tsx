@@ -4,150 +4,143 @@ import Image from "next/image";
 import Link from "next/link";
 import { siteContent } from "@/data/siteContent";
 
-export default function Footer() {
-  const navLinks = [
-    { label: "Overview", href: "#overview" },
-    { label: "Architecture", href: "#architecture" },
-    { label: "Nature", href: "#nature" },
-    { label: "Residences", href: "#residences" },
-    { label: "Amenities", href: "#amenities" },
-    { label: "Floor Plans", href: "#floor-plans" },
-    { label: "Location", href: "#location" },
-    { label: "Enquiries", href: "#contactus" },
-  ];
+interface FooterProps {
+  onOpenEnquiry?: (trigger: HTMLButtonElement) => void;
+}
+
+/**
+ * Rooted Living footer — brand, seven nav anchors, enquiry action.
+ * Contact channels stay pending until verified; no invented legal copy.
+ */
+export default function Footer({ onOpenEnquiry }: FooterProps) {
+  const navLinks = siteContent.navigation;
+  const email = siteContent.contact.email.trim();
+  const phone = siteContent.contact.phone.trim();
+  const socials = siteContent.contact.socials.filter(
+    (social) => Boolean(social.url?.trim())
+  );
 
   return (
-    <footer id="footer" className="relative bg-[#0D5A46] text-[#F8F5ED] pt-20 pb-12 overflow-hidden border-t border-[#C6A568]/30">
-      <div id="contactus" className="sr-only" />
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-12">
-        {/* Top 3-Area Editorial Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 pb-16 border-b border-white/15">
-          {/* Area A: Brand Signature */}
-          <div className="lg:col-span-4 space-y-6">
-            <Link href="#hero" className="inline-block group" aria-label="VANAE Home">
-              <div className="relative inline-block overflow-hidden rounded-xl border border-[#C6A568]/40 shadow-md transition-all duration-300 group-hover:border-[#C6A568]">
+    <footer
+      id="footer"
+      className="relative bg-ink text-ivory-soft border-t border-white/10 pb-28 sm:pb-24"
+    >
+      <div className="vanae-container pt-16 md:pt-20">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-10 pb-12 border-b border-white/10">
+          <div className="md:col-span-5 space-y-5">
+            <Link
+              href="#home"
+              className="inline-block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+              aria-label="VANAE — Home"
+            >
+              <div className="inline-flex items-center justify-center bg-forest rounded-xl px-3 py-2 border border-gold/35">
                 <Image
                   src={siteContent.branding.logoLight}
-                  alt={siteContent.branding.name}
+                  alt=""
                   width={492}
                   height={430}
-                  className="h-16 w-auto object-contain block transition-transform duration-300 group-hover:scale-105"
+                  className="h-12 w-auto object-contain"
                 />
               </div>
             </Link>
-
-            <div className="space-y-2">
-              <h3 className="font-serif text-xl sm:text-2xl text-white font-normal tracking-wide">
-                THE ART OF ROOTED LIVING
-              </h3>
-              <p className="text-xs uppercase tracking-[0.25em] text-[#C6A568] font-medium font-sans">
-                {siteContent.branding.tagline}
-              </p>
-            </div>
-
-            <p className="text-xs text-[#F8F5ED]/75 leading-relaxed font-sans max-w-sm">
-              Rising 36 towering floors above Kollur, ORR Exit 2, Hyderabad. A sanctuary where expansive luxury living preserves an intimate connection to the earth.
+            <p className="font-serif text-lg text-ivory-soft tracking-wide">
+              {siteContent.branding.name}
+            </p>
+            <p className="font-sans text-sm text-ivory-soft/70 leading-relaxed max-w-sm">
+              {siteContent.location.publicPlace}
             </p>
           </div>
 
-          {/* Area B: Navigation Architecture */}
-          <div className="lg:col-span-4 space-y-5">
-            <span className="text-xs uppercase tracking-[0.25em] text-[#C6A568] font-semibold block">
-              EXPLORE VANAE
+          <div className="md:col-span-4 space-y-4">
+            <span className="text-[11px] uppercase tracking-[0.25em] text-gold font-semibold block">
+              Explore
             </span>
-
-            <nav className="grid grid-cols-2 gap-x-6 gap-y-3 pt-1">
-              {navLinks.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="text-xs sm:text-sm text-[#F8F5ED]/80 hover:text-[#C6A568] transition-colors py-1 block font-sans font-medium"
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <nav aria-label="Footer navigation">
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {navLinks.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="inline-block text-xs sm:text-sm text-ivory-soft/75 hover:text-gold transition-colors motion-reduce:transition-none py-1.5 font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-sm"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </nav>
           </div>
 
-          {/* Area C: Addresses & Direct Contact */}
-          <div className="lg:col-span-4 space-y-6">
-            <span className="text-xs uppercase tracking-[0.25em] text-[#C6A568] font-semibold block">
-              ADDRESSES
+          <div className="md:col-span-3 space-y-4">
+            <span className="text-[11px] uppercase tracking-[0.25em] text-gold font-semibold block">
+              Contact
             </span>
 
-            {/* Site Address */}
-            <div className="space-y-1">
-              <span className="text-[11px] uppercase tracking-wider text-[#C6A568]/90 font-medium block">
-                Site Address
-              </span>
-              <p className="text-xs text-[#F8F5ED]/85 leading-relaxed font-sans">
-                {siteContent.footer.siteAddress}
-              </p>
+            {email ? (
               <a
-                href="https://maps.google.com/?q=Kollur+Exit+2+Nehru+Outer+Ring+Road+Hyderabad"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block text-[11px] text-[#C6A568] hover:underline pt-0.5"
+                href={`mailto:${email}`}
+                className="block text-sm text-ivory-soft hover:text-gold transition-colors motion-reduce:transition-none font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-sm"
               >
-                View on Google Maps →
+                {email}
               </a>
-            </div>
-
-            {/* Corporate Address */}
-            <div className="space-y-1 pt-2">
-              <span className="text-[11px] uppercase tracking-wider text-[#C6A568]/90 font-medium block">
-                Corporate Office
-              </span>
-              <p className="text-xs text-[#F8F5ED]/85 leading-relaxed font-sans">
-                {siteContent.footer.corporateAddress}
+            ) : (
+              <p className="text-xs text-ivory-soft/55 font-sans">
+                Sales email TO CONFIRM
               </p>
-            </div>
+            )}
 
-            {/* Inquiries */}
-            <div className="space-y-1 pt-2">
-              <span className="text-[11px] uppercase tracking-wider text-[#C6A568]/90 font-medium block">
-                Official Inquiries
-              </span>
+            {phone ? (
               <a
-                href={`mailto:${siteContent.contact.email}`}
-                className="text-xs sm:text-sm text-white hover:text-[#C6A568] transition-colors font-medium font-sans block"
+                href={`tel:${phone.replace(/\s+/g, "")}`}
+                className="block text-sm text-ivory-soft hover:text-gold transition-colors motion-reduce:transition-none font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-sm"
               >
-                {siteContent.contact.email}
+                {siteContent.contact.displayPhone || phone}
               </a>
-            </div>
-          </div>
-        </div>
+            ) : (
+              <p className="text-xs text-ivory-soft/55 font-sans">
+                Phone TO CONFIRM
+              </p>
+            )}
 
-        {/* Bottom Tier: Copyright, RERA, and Socials */}
-        <div className="pt-10 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-[#F8F5ED]/65 font-sans">
-          {/* Copyright & Attribution */}
-          <div className="text-center md:text-left">
-            <p>
-              {siteContent.footer.copyright}
+            <p className="text-xs text-ivory-soft/45 font-sans">
+              WhatsApp TO CONFIRM
             </p>
-          </div>
 
-          {/* RERA Notice */}
-          <div className="text-center">
-            <p className="text-[11px] uppercase tracking-wider text-[#F8F5ED]/80">
+            {onOpenEnquiry && (
+              <button
+                type="button"
+                onClick={(event) => onOpenEnquiry(event.currentTarget)}
+                className="mt-1 inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-ink font-sans text-xs tracking-[0.18em] uppercase transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+              >
+                Enquire
+              </button>
+            )}
+
+            <p className="text-[11px] text-ivory-soft/40 leading-relaxed pt-2 font-sans">
               {siteContent.footer.reraNumber}
             </p>
           </div>
+        </div>
 
-          {/* Social Channels */}
-          <div className="flex items-center space-x-6">
-            {siteContent.contact.socials.map((social) => (
-              <a
-                key={social.name}
-                href={social.url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs uppercase tracking-wider text-[#F8F5ED]/75 hover:text-[#C6A568] transition-colors font-semibold"
-              >
-                {social.short}
-              </a>
-            ))}
-          </div>
+        <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[11px] text-ivory-soft/50 font-sans">
+          <p>{siteContent.footer.copyright}</p>
+          {socials.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-5">
+              {socials.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="uppercase tracking-wider hover:text-gold transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-sm"
+                >
+                  {social.short || social.name}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-ivory-soft/35">Social profiles TO CONFIRM</p>
+          )}
         </div>
       </div>
     </footer>

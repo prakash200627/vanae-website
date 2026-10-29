@@ -1,21 +1,19 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import IntroSection from "@/components/IntroSection";
-import ElevationParallax from "@/components/ElevationParallax";
-import BespokeCollage from "@/components/BespokeCollage";
-import SkyTerraceSection from "@/components/SkyTerraceSection";
+import ArchitectureNatureStory from "@/components/ArchitectureNatureStory";
 import AmenitiesSection from "@/components/AmenitiesSection";
-import SanctuaryExpandable from "@/components/SanctuaryExpandable";
 import FloorPlansSection from "@/components/FloorPlansSection";
-import LocationSection from "@/components/LocationSection";
 import GallerySection from "@/components/GallerySection";
+import EnquirySection from "@/components/EnquirySection";
+import LocationSection from "@/components/LocationSection";
 import Footer from "@/components/Footer";
 import EnquiryModal from "@/components/EnquiryModal";
 import VideoModal from "@/components/VideoModal";
-import LightboxModal from "@/components/LightboxModal";
+import LightboxModal, { type LightboxItem } from "@/components/LightboxModal";
 import FloatingActions from "@/components/FloatingActions";
 
 import OpeningLogoAnimation from "@/components/OpeningLogoAnimation";
@@ -23,63 +21,66 @@ import { siteContent } from "@/data/siteContent";
 
 export default function Home() {
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
-  const [enquiryTitle, setEnquiryTitle] = useState("BRINGING IN THE EASE YOU DESIRE");
+  const [enquiryTitle, setEnquiryTitle] = useState("Register your interest");
   const [enquiryFormTitle, setEnquiryFormTitle] = useState("Register Your Interest");
-  const enquiryTriggerRef = useRef<HTMLButtonElement>(null);
+  const enquiryTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const floatingEnquiryRef = useRef<HTMLButtonElement>(null);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const openRegister = (title: string = "Register Your Interest") => {
-    setEnquiryTitle("BRINGING IN THE EASE YOU DESIRE");
+  const [lightboxItems, setLightboxItems] = useState<LightboxItem[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const lightboxTriggerRef = useRef<HTMLElement | null>(null);
+
+  const openRegister = (
+    title: string = "Register Your Interest",
+    trigger?: HTMLButtonElement | null
+  ) => {
+    enquiryTriggerRef.current =
+      trigger ?? floatingEnquiryRef.current ?? enquiryTriggerRef.current;
+    setEnquiryTitle("Register your interest");
     setEnquiryFormTitle(title);
     setIsEnquiryOpen(true);
   };
 
+  const openLightbox = (
+    items: LightboxItem[],
+    index: number,
+    trigger: HTMLElement | null
+  ) => {
+    lightboxTriggerRef.current = trigger;
+    setLightboxItems(items);
+    setLightboxIndex(index);
+  };
+
   return (
-    <main className="min-h-screen bg-[#0f0708] text-white">
-      {/* 0. Opening Logo Brand Animation with 3D Flip Transition */}
+    <main className="min-h-screen bg-forest-nearBlack text-white">
       <OpeningLogoAnimation />
 
-      {/* 1. Sticky / Transparent Header Navbar */}
       <Navbar onOpenRegister={() => openRegister("Register Now")} />
 
-      {/* 2. Hero Video & Parallax Section */}
-      <HeroSection />
+      <HeroSection onOpenEnquiry={() => openRegister("Register Your Interest")} />
 
-      {/* 3. Intro / Overview & 4-Column Statistics */}
-      <IntroSection onOpenBrochure={() => openRegister("Download Brochure")} />
+      <IntroSection onOpenBrochure={() => openRegister("Register Interest")} />
 
-      {/* 4. Elevation & New Heights Parallax Section */}
-      <ElevationParallax />
+      <ArchitectureNatureStory onPlayVideo={() => setIsVideoOpen(true)} />
 
-      {/* 5. Bespoke Living & Floating 3-Image Collage */}
-      <BespokeCollage onOpenApartments={() => openRegister("Apartment Enquiry")} />
-
-      {/* 6. Nature Storytelling & Environmental Perks Banner */}
-      <SkyTerraceSection />
-
-      {/* 7. Upscale Lifestyle Amenities with 3D Flip Cards & 6 Category Directory */}
       <AmenitiesSection onOpenAmenities={() => openRegister("Amenities Enquiry")} />
 
-      {/* 8. Vertical Ecosystem Dynamic Expanding Section with Play Button */}
-      <SanctuaryExpandable
-        onPlayVideo={() => setIsVideoOpen(true)}
-        onOpenOutdoor={() => openRegister("Outdoor Lifestyle Enquiry")}
+      <FloorPlansSection
+        onOpenPlans={() => openRegister("Request Floor Plans")}
+        onOpenLightbox={openLightbox}
       />
 
-      {/* 9. Floor Plans Crafted to Suit Your Lifestyle */}
-      <FloorPlansSection onOpenPlans={() => openRegister("Request Floor Plans")} />
+      <GallerySection onOpenLightbox={openLightbox} />
 
-      {/* 10. Location Split Panel with Kollur ORR Exit 2 & Live Map */}
+      <EnquirySection
+        onOpenEnquiry={(trigger) => openRegister("Enquiry", trigger)}
+      />
+
       <LocationSection />
 
-      {/* 12. Luxury Gallery with Hover Zoom and Lightbox */}
-      <GallerySection onOpenLightbox={(idx) => setLightboxIndex(idx)} />
+      <Footer onOpenEnquiry={(trigger) => openRegister("Enquiry", trigger)} />
 
-      {/* 13. Footer & Regulatory Information */}
-      <Footer />
-
-      {/* Interactive Popups & Modals */}
       <EnquiryModal
         isOpen={isEnquiryOpen}
         onClose={() => setIsEnquiryOpen(false)}
@@ -95,15 +96,19 @@ export default function Home() {
       />
 
       <LightboxModal
+        items={lightboxItems}
         currentIndex={lightboxIndex}
         onClose={() => setLightboxIndex(null)}
-        onNavigate={(idx) => setLightboxIndex(idx)}
+        onNavigate={setLightboxIndex}
+        triggerRef={lightboxTriggerRef}
       />
 
-      {/* Floating Action Buttons: Enquiry (top) + WhatsApp (bottom) */}
       <FloatingActions
-        onOpenEnquiry={() => openRegister("Register Your Interest")}
-        enquiryButtonRef={enquiryTriggerRef}
+        onOpenEnquiry={() =>
+          openRegister("Register Your Interest", floatingEnquiryRef.current)
+        }
+        enquiryButtonRef={floatingEnquiryRef}
+        isEnquiryOpen={isEnquiryOpen}
       />
     </main>
   );

@@ -1,126 +1,178 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Search } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { siteContent } from "@/data/siteContent";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+export type GalleryLightboxItem = {
+  src: string;
+  title: string;
+  category?: string;
+};
 
 interface GallerySectionProps {
-  onOpenLightbox: (index: number) => void;
+  onOpenLightbox: (
+    items: GalleryLightboxItem[],
+    index: number,
+    trigger: HTMLElement | null
+  ) => void;
 }
 
+/**
+ * Rooted Living gallery — horizontal snap rail (≈3 cards on desktop).
+ * Only approved items with src open the lightbox.
+ */
 export default function GallerySection({ onOpenLightbox }: GallerySectionProps) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const triggerRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
 
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
+  const allItems = siteContent.gallery.items;
+  const approvedItems = allItems.filter(
+    (item) => item.imageApproved === true && Boolean(item.src)
+  );
 
-    const ctx = gsap.context(() => {
-      // Heading reveal
-      const lines = headingRef.current?.querySelectorAll(".clip-line");
-      if (lines) {
-        gsap.fromTo(
-          lines,
-          { clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", opacity: 0, y: 30 },
-          {
-            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)",
-            opacity: 1,
-            y: 0,
-            duration: 1.1,
-            stagger: 0.2,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: headingRef.current,
-              start: "top 80%",
-            },
-          }
-        );
-      }
+  const lightboxItems: GalleryLightboxItem[] = approvedItems.map((item) => ({
+    src: item.src,
+    title: item.title,
+    category: item.category,
+  }));
 
-      // Stagger gallery items appearance
-      if (gridRef.current) {
-        gsap.fromTo(
-          gridRef.current.children,
-          { y: 30, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.7,
-            stagger: 0.08,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: gridRef.current,
-              start: "top 85%",
-            },
-          }
-        );
-      }
-    }, sectionRef);
-
-    return () => ctx.revert();
+  const updateArrows = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setCanPrev(el.scrollLeft > 8);
+    setCanNext(el.scrollLeft < max - 8);
   }, []);
 
+  useEffect(() => {
+    updateArrows();
+    const el = scrollerRef.current;
+    if (!el) return;
+    const onResize = () => updateArrows();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [updateArrows, approvedItems.length]);
+
+  const scrollByCard = (direction: -1 | 1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>("[data-gallery-card]");
+    const gap = 16;
+    const amount = card
+      ? card.getBoundingClientRect().width + gap
+      : el.clientWidth * 0.85;
+    el.scrollBy({ left: direction * amount, behavior: "smooth" });
+  };
+
   return (
-    <section id="gallery" ref={sectionRef} className="py-24 md:py-36 bg-[#f7f5f2] text-[#232323]">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16 md:mb-20">
-          <span className="text-gold text-xs tracking-[0.3em] uppercase font-semibold block mb-4">
+    <section
+      id="gallery"
+      className="bg-ivory text-charcoal overflow-x-hidden"
+      aria-labelledby="gallery-heading"
+    >
+      <div className="vanae-container pt-12 pb-14 md:pt-14 md:pb-16">
+        <header className="max-w-2xl mb-6 md:mb-8">
+          <span className="text-forest text-xs tracking-[0.28em] uppercase font-semibold block mb-3">
             {siteContent.gallery.tag}
           </span>
-
-          <h3
-            ref={headingRef}
-            className="font-serif text-3xl sm:text-4xl md:text-5xl text-gold font-normal leading-tight tracking-tight uppercase"
+          <h2
+            id="gallery-heading"
+            className="font-serif text-fluid-2xl md:text-fluid-3xl text-charcoal font-normal tracking-tight"
           >
-            {siteContent.gallery.headingLines.map((line, idx) => (
-              <span key={idx} className="block clip-line overflow-hidden">
+            {siteContent.gallery.headingLines.map((line) => (
+              <span key={line} className="block">
                 {line}
               </span>
             ))}
-          </h3>
-        </div>
+          </h2>
+          <p className="mt-4 font-sans text-sm text-stone leading-relaxed">
+            {siteContent.gallery.approvalNote}
+          </p>
+        </header>
 
-        {/* Gallery Grid */}
-        <div
-          ref={gridRef}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-        >
-          {siteContent.gallery.items.map((item, idx) => (
-            <div
-              key={idx}
-              onClick={() => onOpenLightbox(idx)}
-              className="group relative h-[300px] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-[#181719] border border-black/5"
-            >
-              <Image
-                src={item.src}
-                alt={item.title}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-              />
-
-              {/* Hover Dark Overlay */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-6">
-                <span className="text-[10px] uppercase tracking-widest text-gold font-semibold self-start">
-                  {item.category}
-                </span>
-
-                <div className="w-12 h-12 rounded-full bg-gold/25 border border-gold/40 flex items-center justify-center self-center transition-transform duration-300 group-hover:scale-110">
-                  <Search className="w-5 h-5 text-gold" />
-                </div>
-
-                <h4 className="text-white text-sm font-serif tracking-wide leading-tight transition-transform duration-300 translate-y-3 group-hover:translate-y-0">
-                  {item.title}
-                </h4>
-              </div>
+        {approvedItems.length === 0 ? (
+          <p className="font-sans text-stone">
+            Gallery imagery pending approved photography.
+          </p>
+        ) : (
+          <div className="relative">
+            <div className="hidden sm:flex absolute -top-14 right-0 gap-2 z-10">
+              <button
+                type="button"
+                onClick={() => scrollByCard(-1)}
+                disabled={!canPrev}
+                aria-label="Previous gallery images"
+                className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-full border border-ivory-border bg-ivory text-ink hover:border-gold disabled:opacity-35 disabled:cursor-not-allowed flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              >
+                <ChevronLeft className="w-5 h-5" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollByCard(1)}
+                disabled={!canNext}
+                aria-label="Next gallery images"
+                className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-full border border-ivory-border bg-ivory text-ink hover:border-gold disabled:opacity-35 disabled:cursor-not-allowed flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              >
+                <ChevronRight className="w-5 h-5" aria-hidden="true" />
+              </button>
             </div>
-          ))}
-        </div>
+
+            <div
+              ref={scrollerRef}
+              onScroll={updateArrows}
+              className="flex gap-4 overflow-x-auto overscroll-x-contain pb-2 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              style={{ WebkitOverflowScrolling: "touch" }}
+              role="list"
+              aria-label="Project gallery"
+            >
+              {approvedItems.map((item, index) => (
+                <div
+                  key={`${item.src}-${item.title}`}
+                  role="listitem"
+                  data-gallery-card
+                  className="snap-start shrink-0 w-[85%] sm:w-[calc(50%-0.5rem)] md:w-[calc((100%-2rem)/3)]"
+                >
+                  <button
+                    ref={(el) => {
+                      triggerRefs.current[index] = el;
+                    }}
+                    type="button"
+                    onClick={(event) =>
+                      onOpenLightbox(
+                        lightboxItems,
+                        index,
+                        event.currentTarget
+                      )
+                    }
+                    className="group relative block w-full aspect-[4/3] overflow-hidden rounded-none bg-sage/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ivory"
+                    aria-label={`Open gallery image: ${item.title}`}
+                  >
+                    <Image
+                      src={item.src}
+                      alt={item.title}
+                      fill
+                      sizes="(max-width: 640px) 85vw, (max-width: 768px) 50vw, 33vw"
+                      className="object-cover"
+                      loading={index < 3 ? "eager" : "lazy"}
+                      priority={index === 0}
+                    />
+                    <span className="sr-only">
+                      {item.category ? `${item.category}. ` : ""}
+                      {item.title}
+                    </span>
+                  </button>
+                  <p className="mt-3 font-sans text-xs tracking-[0.16em] uppercase text-stone truncate">
+                    {item.title}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

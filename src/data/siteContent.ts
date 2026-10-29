@@ -16,15 +16,50 @@ export interface SiteContent {
     badgeText: string;
     majorStatement: string;
     supportingCopy: string;
+    ctaText: string;
+    /** Required disclosure while the hero film carries an AI / CGI watermark. */
+    impressionNote: string;
+    /** Provisional figures — not shown in the hero until client-approved. */
     facts: string[];
   };
   overview: {
     eyebrow: string;
     headingLines: string[];
     paragraphs: string[];
+    /** Portrait candidate — use only when portraitApproved is true. */
+    portraitImage: string;
+    portraitAlt: string;
+    /**
+     * Rights gate for overview imagery. When false, UI must show a labelled
+     * placeholder instead of presenting the file as approved photography.
+     */
+    portraitApproved: boolean;
+    /** Spec strip — every item remains unverified until client approval. */
+    projectDetails: {
+      value: string;
+      label: string;
+      status: "TO CONFIRM";
+    }[];
     stats: { value: string; label: string }[];
     badge: string;
     brochureBtnText: string;
+  };
+  /** Consolidated architecture / nature story (replaces Elevation, Collage, Sky, Sanctuary mounts). */
+  rootedStory: {
+    eyebrow: string;
+    sectionHeading: string;
+    panels: {
+      title: string;
+      body: string;
+      image: string;
+      imageAlt: string;
+      /**
+       * Rights gate — when false, UI shows a rectangular “Image pending”
+       * placeholder instead of presenting the file as approved photography.
+       */
+      imageApproved: boolean;
+    }[];
+    videoCtaText: string;
   };
   architecture: {
     headingLines: string[];
@@ -59,12 +94,20 @@ export interface SiteContent {
   clubhouseAmenities: {
     headingLines: string[];
     supportingCopy: string;
+    approvalNote: string;
     bannerText: string;
     bannerSubtext: string;
     bannerBtnText: string;
     categories: {
       name: string;
+      description: string;
+      /** Short status chip — e.g. TO CONFIRM or As shown. */
+      status: string;
       items: string[];
+      image: string;
+      imageAlt: string;
+      /** Rights gate — amenity photos stay off until explicitly approved. */
+      imageApproved: boolean;
     }[];
     featuredCards: {
       title: string;
@@ -84,7 +127,22 @@ export interface SiteContent {
     headingLines: string[];
     paragraphs: string[];
     btnText: string;
-    plans: { src: string; title: string }[];
+    approvalNote: string;
+    /** Shown when no approved drawings are available for display. */
+    pendingLabel: string;
+    pendingDetail: string;
+    plans: {
+      src: string;
+      title: string;
+      /** Intrinsic pixel size — used to preserve aspect without cropping. */
+      width: number;
+      height: number;
+      labelStatus: "TO CONFIRM";
+      /** Rights + provenance gate — false until a real approved drawing is confirmed. */
+      drawingApproved: boolean;
+      /** Descriptive alt based on what the drawing actually shows. */
+      alt?: string;
+    }[];
   };
   specifications: {
     tag: string;
@@ -99,15 +157,43 @@ export interface SiteContent {
     tag: string;
     headingLines: string[];
     copy: string;
+    /** Supported public description only — exact pin/address remain TO CONFIRM. */
+    publicPlace: string;
+    approvalNote: string;
     siteAddress: string;
     corporateAddress: string;
+    /**
+     * Location media — do not render until rights and suitability are confirmed.
+     * location-aerial.jpg duplicates bespoke-2; sky-terrace.jpg is a site plan, not a photo.
+     */
     mapImage: string;
+    mapImageAlt: string;
+    imageApproved: boolean;
+    /** Valid Google Maps embed URL (iframe src) — not the share/place URL. */
     embedMapUrl: string;
+    /** Client-supplied place URL for “Open in Google Maps”. */
+    openMapsUrl: string;
+    mapApproved: boolean;
+  };
+  enquiry: {
+    eyebrow: string;
+    heading: string;
+    supportingCopy: string;
+    ctaText: string;
   };
   gallery: {
     tag: string;
     headingLines: string[];
-    items: { src: string; title: string; category: string }[];
+    approvalNote: string;
+    items: {
+      src: string;
+      title: string;
+      category: string;
+      /** Editorial frame hint for mosaic layout. */
+      frame: "tall" | "wide" | "square";
+      /** Rights gate — gallery photos stay off until explicitly approved. */
+      imageApproved: boolean;
+    }[];
   };
   contact: {
     tag: string;
@@ -143,30 +229,35 @@ export const siteContent: SiteContent = {
     tagline: "Ultra-Luxury Bespoke Residences",
     logoLight: "/assets/vanae-logo.jpg",
     logoDark: "/assets/vanae-logo.jpg",
-    favicon: "/assets/vanae-logo.jpg",
+    favicon: "/assets/logo.svg",
     primaryColor: "#0D5A46",
-    goldColor: "#c39663",
+    goldColor: "#C39663",
   },
+  /** Primary IA — exactly seven destinations (01–07). */
   navigation: [
-    { label: "HOME", href: "#hero" },
+    { label: "HOME", href: "#home" },
     { label: "OVERVIEW", href: "#overview" },
-    { label: "ARCHITECTURE", href: "#architecture" },
-    { label: "NATURE", href: "#nature" },
-    { label: "RESIDENCES", href: "#residences" },
     { label: "AMENITIES", href: "#amenities" },
-    { label: "ECOSYSTEM", href: "#ecosystem" },
     { label: "FLOOR PLANS", href: "#floor-plans" },
     { label: "LOCATION", href: "#location" },
     { label: "GALLERY", href: "#gallery" },
-    { label: "ENQUIRY", href: "#contactus" },
+    { label: "ENQUIRY", href: "#enquiry" },
   ],
   hero: {
     videoSrc: "/assets/videos/hero.mp4",
+    /**
+     * Poster currently may not match the film (audit). Frame extraction was
+     * unavailable without ffmpeg — keep this fallback until a matching still
+     * is supplied or extracted safely.
+     */
     posterSrc: "/assets/images/hero-poster.jpg",
-    scrollText: "SCROLL TO UNLEASH THE EXPERIENCE",
-    badgeText: "SEIZE THE MOMENT TO LIVE IN THE SKIES BY THE TREES",
-    majorStatement: "In a wonder called Vanae. Welcome home.",
-    supportingCopy: "In a wonder called Vanae. Welcome home.",
+    scrollText: "Discover Vanae",
+    badgeText: "VANAE",
+    majorStatement: "Where architecture and landscape form one story.",
+    supportingCopy: "Rooted living in Kollur, Hyderabad.",
+    ctaText: "Enquire",
+    impressionNote:
+      "Artist’s impression. Film and stills are illustrative and may include AI-assisted visualisation.",
     facts: [
       "3 & 4 BHK",
       "36 Floors",
@@ -175,11 +266,23 @@ export const siteContent: SiteContent = {
     ],
   },
   overview: {
-    eyebrow: "THE ART OF ROOTED LIVING",
-    headingLines: ["A NEW SKYLINE IS", "TAKING ROOT."],
+    eyebrow: "The art of rooted living",
+    headingLines: ["Rise without", "leaving the earth."],
     paragraphs: [
-      "Somewhere along the way, up into the skies, our homes loose their connection to mother earth. And with it, a vital essence of better living. What if we could rise without leaving it behind?",
-      "Planted in the rapidly evolving landscape of Kollur, by ORR Exit 2, Vanae unfolds as a unique residential marvel that's 36 floors high, spread across 6 towers and destined to be home to over 1200 families. It's a colossal symbol of elegance crafted to elevate all who decide to call it home.",
+      "Contemporary homes often trade the ground for height. Vanae is shaped around a quieter idea: that nature and architecture can share the same rhythm.",
+      "Along Kollur, near ORR Exit 2, the project is envisioned as a place where landscape is not decoration at the edge of the plan, but part of how daily life is framed.",
+    ],
+    portraitImage: "/assets/images/tower-elevation.jpg",
+    portraitAlt:
+      "Residential towers with planted balconies at dusk, seen from across a tree-lined road.",
+    portraitApproved: true,
+    projectDetails: [
+      { value: "3 & 4 BHK", label: "Residences", status: "TO CONFIRM" },
+      { value: "6", label: "Towers", status: "TO CONFIRM" },
+      { value: "36", label: "Floors", status: "TO CONFIRM" },
+      { value: "11 ft", label: "Ceilings", status: "TO CONFIRM" },
+      { value: "~1,00,000 sq.ft.", label: "Clubhouse", status: "TO CONFIRM" },
+      { value: "50+", label: "Amenities", status: "TO CONFIRM" },
     ],
     stats: [
       { value: "3 & 4", label: "BHK Residences" },
@@ -187,8 +290,38 @@ export const siteContent: SiteContent = {
       { value: "6", label: "Towers Spread Across" },
       { value: "11 FT", label: "High Ceilings" },
     ],
-    badge: "Planted in Kollur, by ORR Exit 2 · Destined for over 1200 Families",
-    brochureBtnText: "Download Brochure",
+    badge: "Kollur, ORR Exit 2 — Hyderabad",
+    brochureBtnText: "Register interest",
+  },
+  rootedStory: {
+    eyebrow: "Architecture & nature",
+    sectionHeading: "Three chapters of rooted living",
+    panels: [
+      {
+        title: "The land",
+        body: "Before the building is the ground it meets. At Kollur, near ORR Exit 2, the story begins with landscape held close — not as ornament at the edge of a plan, but as the quiet companion to how a place is imagined.",
+        image: "/assets/images/gallery-12.jpg",
+        imageAlt:
+          "Garden walk beside a play area, flowering plants, and a curved building front.",
+        imageApproved: true,
+      },
+      {
+        title: "The architecture",
+        body: "Architecture here is meant to rise with the land rather than against it — a calm vertical reading of shade, silhouette, and sky. Exact materials, heights, and technical specifications remain subject to client confirmation.",
+        image: "/assets/images/sanctuary-building.jpg",
+        imageAlt:
+          "Evening view of illuminated residential towers and a low glass pavilion among trees.",
+        imageApproved: true,
+      },
+      {
+        title: "The living",
+        body: "Daily life is framed by light, air, and the nearness of landscape. Interiors favour composure over spectacle, so rooms feel open and unhurried. Detailed residence configurations and amenity claims are withheld until approved.",
+        image: "/assets/images/gallery-2.jpg",
+        imageAlt: "Living room with sofas, pendant lights, and a tall window.",
+        imageApproved: true,
+      },
+    ],
+    videoCtaText: "Watch the film",
   },
   architecture: {
     headingLines: ["WHERE THE FOREST", "ASCENDS."],
@@ -250,116 +383,79 @@ export const siteContent: SiteContent = {
     ],
   },
   clubhouseAmenities: {
-    bannerText: "Over 50 Lifestyle Amenities Curated Across",
-    bannerSubtext: "1,00,000 Sqft Clubhouse",
-    bannerBtnText: "Explore Clubhouse",
-    headingLines: ["IT ONLY GETS", "BETTER HERE"],
+    /**
+     * Image-led collections from visually inspected project assets.
+     * Labels describe what each frame shows — not an official amenity directory.
+     * Mismatched amenity-* stock (fitness water portrait, cafe→court, etc.) withheld.
+     */
+    bannerText: "",
+    bannerSubtext: "",
+    bannerBtnText: "Enquire about amenities",
+    headingLines: ["Spaces for", "everyday ease."],
     supportingCopy:
-      "Designed as a place to gather, celebrate, compete and retreat, the 1,00,000 sqft clubhouse brings the social, recreational and leisure rhythms of life together in a home’s interconnected setting. It connects building relationships, life's special moments, and there's no other place at home like this.",
+      "A quiet selection of project spaces drawn from existing photography. Official amenity names, counts, and a full directory remain TO CONFIRM.",
+    approvalNote:
+      "Labels describe the image only. Official amenity directory TO CONFIRM.",
     categories: [
       {
-        name: "FIRST IMPRESSIONS",
+        name: "Indoor lounge",
+        description:
+          "A plant-filled indoor lounge with soft seating and large windows.",
+        status: "As shown",
         items: [
-          "Entry",
-          "Exit",
-          "Security Cabin",
-          "Branding With Plantation",
-          "Entrance Plaza",
-          "Pathway",
+          "Visual reference from project imagery",
+          "Official listing and hours TO CONFIRM",
         ],
+        image: "/assets/images/bespoke-1.jpg",
+        imageAlt:
+          "Plant-filled indoor lounge with sofas, low tables, and large windows.",
+        imageApproved: true,
       },
       {
-        name: "AMENITIES & NATURE",
+        name: "Event room",
+        description:
+          "A large room set with round tables facing a projection screen.",
+        status: "As shown",
         items: [
-          "Landscaping & Nature",
-          "Butterfly Garden",
-          "Herbal Garden",
-          "Thematic Plantation",
-          "Open Amphitheatre / Stage",
-          "Event Lawn",
-          "Firepit Lawn",
-          "Leisure Lawn",
-          "Pet Park",
+          "Visual reference from project imagery",
+          "Official listing and capacity TO CONFIRM",
         ],
-      },
-      {
-        name: "SPORTS & ACTIVE LIVING",
-        items: [
-          "Tennis Court",
-          "Squash Court",
-          "Half Basketball Court",
-          "Cricket Nets",
-          "Swimming Pool",
-        ],
-      },
-      {
-        name: "WELLNESS & MINDFULNESS",
-        items: [
-          "Yoga Deck",
-          "Meditation Lawn",
-          "Spa",
-          "Sauna",
-          "Physiotherapy Clinic",
-        ],
-      },
-      {
-        name: "FAMILY & COMMUNITY",
-        items: [
-          "Banquet Hall",
-          "Mini Theatre",
-          "Cafe",
-          "Guest Rooms (10)",
-          "Creche",
-        ],
-      },
-      {
-        name: "WORK & CONVENIENCE",
-        items: [
-          "Supermarket",
-          "Co-working Spaces",
-          "Reading Lounge",
-          "Salon",
-        ],
-      },
-    ],
-    featuredCards: [
-      {
-        title: "1,00,000 Sqft Clubhouse",
-        desc: "A sprawling social hub connecting building relationships, family celebrations, and leisure.",
-        icon: "Sparkles",
         image: "/assets/images/amenity-banquet.jpg",
+        imageAlt:
+          "Large event room set with round tables, facing a projection screen.",
+        imageApproved: true,
       },
       {
-        title: "Swimming Pool & Sports Deck",
-        desc: "Championship tennis court, squash court, half basketball court, cricket nets, and swimming pool.",
-        icon: "Dumbbell",
-        image: "/assets/images/amenity-fitness.jpg",
+        name: "Fitness room",
+        description:
+          "A fitness room with mats and equipment beside a window wall.",
+        status: "As shown",
+        items: [
+          "Visual reference from project imagery",
+          "Official listing and equipment TO CONFIRM",
+        ],
+        image: "/assets/images/bespoke-3.jpg",
+        imageAlt:
+          "Soft-focus fitness room with mats and exercise equipment beside a window wall.",
+        imageApproved: true,
       },
       {
-        title: "Spa, Sauna & Physiotherapy",
-        desc: "Dedicated wellness amenities including spa, sauna, and dedicated physiotherapy clinic.",
-        icon: "Sparkles",
+        name: "Treatment room",
+        description:
+          "A calm treatment setting with a prepared table and soft lighting.",
+        status: "As shown",
+        items: [
+          "Visual reference from project imagery",
+          "Official listing and services TO CONFIRM",
+        ],
         image: "/assets/images/amenity-wellbeing.jpg",
-      },
-      {
-        title: "Artisan Cafeteria & Lounge",
-        desc: "A vibrant social destination to enjoy specialty coffees and gourmet bites with neighbours.",
-        icon: "Coffee",
-        image: "/assets/images/amenity-cafe.jpg",
-      },
-      {
-        title: "Reading Lounge & Co-Working",
-        desc: "Thoughtfully configured quiet co-working spaces and reading lounges to work and focus.",
-        icon: "BookOpen",
-        image: "/assets/images/amenity-tranquillity.jpg",
-      },
-      {
-        title: "Mini Theatre & Banquet",
-        desc: "Celebrate monumental life moments in grand banquets and enjoy private cinematic screenings.",
-        icon: "Gamepad2",
-        image: "/assets/images/amenity-gaming.jpg",
+        imageAlt:
+          "Treatment table arranged with stones, a flower, towels, and candles.",
+        imageApproved: true,
       },
     ],
+    /** Unused by the Rooted Living amenities UI — kept empty until approved. */
+    featuredCards: [],
   },
   verticalEcosystem: {
     headingLines: ["AN ENTIRE ECOSYSTEM", "DRAWN AROUND YOU"],
@@ -370,15 +466,39 @@ export const siteContent: SiteContent = {
     btnText: "The Outdoor Lifestyle",
   },
   floorPlans: {
-    headingLines: ["WHERE THERE'S MORE", "TO COMING HOME."],
+    headingLines: ["Plans drawn for", "how you live."],
     paragraphs: [
-      "From the high ceilings and wide corridors to the generous distances you enjoy from your neighbours, Vanae is a place where even space is allowed to breathe. Experience a greater sense of volume, openness and light to living here.",
-      "Thoughtfully configured 3 & 4 BHK residences designed with expansive panoramic views, natural cross-ventilation, and generous 11-foot-high ceilings across 36 towering floors.",
+      "Illustrated unit layouts from local project drawings. The older floor-plan JPEG files were interior photographs and remain withheld.",
+      "Each sheet is shown in full at its true aspect ratio — never cropped. Exact labels, dimensions, and public-display rights remain subject to confirmation.",
     ],
-    btnText: "Request Floor Plans",
+    btnText: "Request floor plans",
+    approvalNote:
+      "Unit labels, dimensions, configurations, and drawing rights are TO CONFIRM.",
+    pendingLabel: "Architectural drawing pending",
+    pendingDetail: "Awaiting approved plans",
+    /**
+     * PNG sheets are furnished sales-layout composites (2D plan + 3D cutaway).
+     * Do not use floor-plan-1.jpg / floor-plan-2.jpg — audit: lobby/spa photos.
+     */
     plans: [
-      { src: "/assets/images/floor-plan-1.jpg", title: "Type A Luxury 3 & 4 BHK Layout" },
-      { src: "/assets/images/floor-plan-2.jpg", title: "Type B Master Suite & Balcony" },
+      {
+        src: "/assets/images/floor-plan-1.png",
+        title: "Block A · 4400 Sft (east)",
+        width: 363,
+        height: 481,
+        labelStatus: "TO CONFIRM",
+        drawingApproved: true,
+        alt: "Illustrated Block A apartment layout, 4400 square feet east, with a 2D floor plan and 3D cutaway.",
+      },
+      {
+        src: "/assets/images/floor-plan-2.png",
+        title: "Block C–F · 2555 Sft (west lower)",
+        width: 361,
+        height: 483,
+        labelStatus: "TO CONFIRM",
+        drawingApproved: true,
+        alt: "Illustrated Block C, D, E and F apartment layout, 2555 square feet west lower, with a 2D floor plan and 3D cutaway.",
+      },
     ],
   },
   specifications: {
@@ -537,33 +657,119 @@ export const siteContent: SiteContent = {
     ],
   },
   location: {
-    tag: "LOCATION & CONNECTIVITY",
-    headingLines: ["LIVE UP TO THE", "POTENTIAL"],
-    copy: "Living in Kollur, by ORR Exit 2, offers connectivity unlike anywhere else in the city. Vanae places you in an evolving landscape just minutes from every destination and convenience, making it the ideal place to grow and thrive with ease.",
+    tag: "Location",
+    headingLines: ["Kollur,", "Hyderabad."],
+    copy: "Vanae Project is listed on Google Maps in Kollur, Hyderabad, near ORR Exit 2. Exact street address, landmarks, and travel details remain TO CONFIRM.",
+    publicPlace: "Vanae Project · Kollur, Hyderabad · near ORR Exit 2",
+    approvalNote:
+      "Interactive map uses the client-supplied Vanae Project Google listing. Exact street address, landmarks, and distances remain TO CONFIRM.",
     siteAddress:
-      "VANAE: Kollur Exit 2, Nehru Outer Ring Road, Nagulapalli, Edulnagulapally, Hyderabad, Telangana – 502300.",
-    corporateAddress:
-      "3rd Floor, Ravi Shankar Arcade, Plot No. 19 & 20, Gachibowli, Hyderabad, Telangana – 500032.",
-    mapImage: "/assets/images/location-aerial.jpg",
+      "Exact site address TO CONFIRM (working note: Kollur / ORR Exit 2 area, Hyderabad).",
+    corporateAddress: "Corporate office address TO CONFIRM.",
+    /**
+     * sky-terrace.jpg is an existing project site-plan graphic (not a photograph /
+     * not an aerial). Shown only as a labelled site plan. location-aerial.jpg is
+     * byte-identical to bespoke-2.jpg and must not be used as an aerial.
+     */
+    mapImage: "/assets/images/sky-terrace.jpg",
+    mapImageAlt:
+      "Illustrative project site plan — not an aerial photograph. Exact street address TO CONFIRM.",
+    /** Not shown in Location; site-plan graphic removed from public Location section. */
+    imageApproved: false,
+    // Embed built from client place id + coords (share URL is not a valid iframe src).
     embedMapUrl:
-      "https://maps.google.com/maps?q=Kollur+Exit+2+Nehru+Outer+Ring+Road+Hyderabad&t=&z=13&ie=UTF8&iwloc=&output=embed",
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.5!2d78.2481326!3d17.4672276!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcbed62a8a370ab%3A0xc869eec4cda08cc3!2sVanae%20Project!5e0!3m2!1sen-IN!2sin!4v1730000000000!5m2!1sen-IN!2sin",
+    openMapsUrl:
+      "https://www.google.com/maps/place/Vanae+Project/@17.462062,78.24976,15.61z/data=!4m6!3m5!1s0x3bcbed62a8a370ab:0xc869eec4cda08cc3!8m2!3d17.4672276!4d78.2481326!16s%2Fg%2F11zxtn9ry2?hl=en-IN",
+    mapApproved: true,
+  },
+  enquiry: {
+    eyebrow: "Enquiry",
+    heading: "Begin a private conversation.",
+    supportingCopy:
+      "Share a few details when you are ready. The form opens only when you choose — nothing appears uninvited.",
+    ctaText: "Open enquiry form",
   },
   gallery: {
-    tag: "GALLERY",
-    headingLines: ["A DISTINGUISHED ADDRESS", "TO CALL HOME"],
+    tag: "Gallery",
+    headingLines: ["Spaces, light,", "and landscape."],
+    approvalNote:
+      "Project imagery selected after visual review. Titles describe what each frame shows — not marketing claims. gallery-3 withheld (lettering names another project).",
+    /**
+     * Mosaic from inspected project assets only. Frames match orientation.
+     * Withheld: gallery-3 (other-project lettering); floor-plan-*; mismatched amenity stock.
+     */
     items: [
-      { src: "/assets/images/gallery-1.jpg", title: "Entrance Grand Foyer Lift", category: "Arrival" },
-      { src: "/assets/images/gallery-2.jpg", title: "Entrance Lounge & Waiting", category: "Lobby" },
-      { src: "/assets/images/gallery-3.jpg", title: "Reception Concierge", category: "Lobby" },
-      { src: "/assets/images/gallery-4.jpg", title: "Panoramic Balcony Horizon", category: "Views" },
-      { src: "/assets/images/gallery-5.jpg", title: "Private Sky Balcony", category: "Views" },
-      { src: "/assets/images/gallery-6.jpg", title: "Rooftop Crown View", category: "Exterior" },
-      { src: "/assets/images/gallery-7.jpg", title: "Indoor Heated Lap Pool", category: "Wellness" },
-      { src: "/assets/images/gallery-8.jpg", title: "Residents Cafe & Bistro", category: "Leisure" },
-      { src: "/assets/images/gallery-9.jpg", title: "Pro Squash Court", category: "Sports" },
-      { src: "/assets/images/gallery-10.jpg", title: "Holistic Wellness Spa", category: "Wellness" },
-      { src: "/assets/images/gallery-11.jpg", title: "Open Air Green Park", category: "Outdoor" },
-      { src: "/assets/images/gallery-12.jpg", title: "Kids Wonderland Play Area", category: "Family" },
+      {
+        src: "/assets/images/gallery-1.jpg",
+        title: "Elevator lobby",
+        category: "Arrival",
+        frame: "tall",
+        imageApproved: true,
+      },
+      {
+        src: "/assets/images/bespoke-2.jpg",
+        title: "Tower with planted balconies",
+        category: "Architecture",
+        frame: "tall",
+        imageApproved: true,
+      },
+      {
+        src: "/assets/images/gallery-4.jpg",
+        title: "Rooftop lounge",
+        category: "Outdoor",
+        frame: "wide",
+        imageApproved: true,
+      },
+      {
+        src: "/assets/images/gallery-5.jpg",
+        title: "Evening terrace",
+        category: "Outdoor",
+        frame: "tall",
+        imageApproved: true,
+      },
+      {
+        src: "/assets/images/gallery-6.jpg",
+        title: "Building above landscaped courts",
+        category: "Architecture",
+        frame: "wide",
+        imageApproved: true,
+      },
+      {
+        src: "/assets/images/gallery-7.jpg",
+        title: "Indoor pool",
+        category: "Wellness",
+        frame: "wide",
+        imageApproved: true,
+      },
+      {
+        src: "/assets/images/gallery-8.jpg",
+        title: "Dining room",
+        category: "Living",
+        frame: "wide",
+        imageApproved: true,
+      },
+      {
+        src: "/assets/images/gallery-9.jpg",
+        title: "Indoor racquet court",
+        category: "Recreation",
+        frame: "tall",
+        imageApproved: true,
+      },
+      {
+        src: "/assets/images/gallery-10.jpg",
+        title: "Treatment room",
+        category: "Wellness",
+        frame: "wide",
+        imageApproved: true,
+      },
+      {
+        src: "/assets/images/gallery-11.jpg",
+        title: "Landscaped courtyard",
+        category: "Landscape",
+        frame: "wide",
+        imageApproved: true,
+      },
     ],
   },
   contact: {
@@ -573,32 +779,27 @@ export const siteContent: SiteContent = {
     phone: "",
     displayPhone: "Contact details upon request",
     isPhonePlaceholder: true,
-    email: "sales@vanae.in",
+    /** Empty until client verifies a public sales email — do not invent an address. */
+    email: "",
     siteAddress:
-      "VANAE: Kollur Exit 2, Nehru Outer Ring Road, Nagulapalli, Edulnagulapally, Hyderabad, Telangana – 502300.",
-    corporateAddress:
-      "3rd Floor, Ravi Shankar Arcade, Plot No. 19 & 20, Gachibowli, Hyderabad, Telangana – 500032.",
-    reraNumberNote: "TS RERA Registration details pending formal confirmation.",
-    socials: [
-      { name: "Facebook", url: "https://facebook.com", short: "Fb." },
-      { name: "Instagram", url: "https://instagram.com", short: "Ig." },
-      { name: "LinkedIn", url: "https://linkedin.com", short: "In." },
-      { name: "WhatsApp", url: "https://wa.me/?text=Hello%2C%20I%20would%20like%20to%20inquire%20about%20VANAE%20luxury%20residences.", short: "Wa." },
-    ],
+      "Exact site address TO CONFIRM · Kollur, Hyderabad, near ORR Exit 2.",
+    corporateAddress: "Corporate office address TO CONFIRM.",
+    reraNumberNote: "RERA / regulatory registration details TO CONFIRM.",
+    /** Only verified profile URLs should be listed; empty until client confirms. */
+    socials: [],
   },
   whatsapp: {
     phoneNumber: "",
     defaultMessage: "Hello, I would like to inquire about VANAE luxury residences.",
-    url: "https://wa.me/?text=Hello%2C%20I%20would%20like%20to%20inquire%20about%20VANAE%20luxury%20residences.",
+    url: "",
   },
   footer: {
     copyright: "© 2026 VANAE. All Rights Reserved.",
     designedBy: "Vanae Architectural Studio",
     designedByUrl: "#",
     siteAddress:
-      "VANAE: Kollur Exit 2, Nehru Outer Ring Road, Nagulapalli, Edulnagulapally, Hyderabad, Telangana – 502300.",
-    corporateAddress:
-      "3rd Floor, Ravi Shankar Arcade, Plot No. 19 & 20, Gachibowli, Hyderabad, Telangana – 500032.",
-    reraNumber: "TS RERA Registration details available upon request.",
+      "Exact site address TO CONFIRM · Kollur, Hyderabad, near ORR Exit 2.",
+    corporateAddress: "Corporate office address TO CONFIRM.",
+    reraNumber: "RERA / regulatory registration details TO CONFIRM.",
   },
 };

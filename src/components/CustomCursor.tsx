@@ -2,26 +2,48 @@
 
 import { useEffect, useState, useRef } from "react";
 
+/**
+ * Desktop-only decorative cursor. Skipped on touch devices and when
+ * prefers-reduced-motion is set so pointer tracking does not run.
+ */
 export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    // Only enable on desktop pointer devices
-    if (window.matchMedia("(hover: none)").matches) return;
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const syncEnabled = () => {
+      setEnabled(finePointer.matches && !motionQuery.matches);
+    };
+    syncEnabled();
+
+    finePointer.addEventListener("change", syncEnabled);
+    motionQuery.addEventListener("change", syncEnabled);
+    return () => {
+      finePointer.removeEventListener("change", syncEnabled);
+      motionQuery.removeEventListener("change", syncEnabled);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
 
     let mouseX = 0;
     let mouseY = 0;
     let ringX = 0;
     let ringY = 0;
-    let rafId: number;
+    let rafId = 0;
+    const hoverCleanups: Array<() => void> = [];
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      if (!isVisible) setIsVisible(true);
+      setIsVisible(true);
 
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
@@ -31,18 +53,24 @@ export default function CustomCursor() {
     const handleMouseLeave = () => setIsVisible(false);
     const handleMouseEnter = () => setIsVisible(true);
 
-    const checkHoverables = () => {
+    const bindHoverables = () => {
+      hoverCleanups.splice(0).forEach((fn) => fn());
       const hoverables = document.querySelectorAll(
         "a, button, input, textarea, select, [role='button'], .cursor-hoverable"
       );
       hoverables.forEach((el) => {
-        el.addEventListener("mouseenter", () => setIsHovered(true));
-        el.addEventListener("mouseleave", () => setIsHovered(false));
+        const onEnter = () => setIsHovered(true);
+        const onLeave = () => setIsHovered(false);
+        el.addEventListener("mouseenter", onEnter);
+        el.addEventListener("mouseleave", onLeave);
+        hoverCleanups.push(() => {
+          el.removeEventListener("mouseenter", onEnter);
+          el.removeEventListener("mouseleave", onLeave);
+        });
       });
     };
 
     const loop = () => {
-      // Smooth lerp follower ring
       ringX += (mouseX - ringX) * 0.18;
       ringY += (mouseY - ringY) * 0.18;
 
@@ -56,8 +84,8 @@ export default function CustomCursor() {
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
 
-    checkHoverables();
-    const observer = new MutationObserver(checkHoverables);
+    bindHoverables();
+    const observer = new MutationObserver(bindHoverables);
     observer.observe(document.body, { childList: true, subtree: true });
 
     loop();
@@ -67,23 +95,28 @@ export default function CustomCursor() {
       document.removeEventListener("mouseleave", handleMouseLeave);
       document.removeEventListener("mouseenter", handleMouseEnter);
       observer.disconnect();
+      hoverCleanups.splice(0).forEach((fn) => fn());
       cancelAnimationFrame(rafId);
+      setIsVisible(false);
+      setIsHovered(false);
     };
-  }, [isVisible]);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <>
-      {/* Inner Dot */}
       <div
         ref={dotRef}
-        className={`fixed top-0 left-0 pointer-events-none z-[999999] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold transition-opacity duration-300 hidden md:block ${
+        aria-hidden="true"
+        className={`fixed top-0 left-0 pointer-events-none z-[999999] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold transition-opacity duration-300 motion-reduce:transition-none ${
           isVisible ? "opacity-100" : "opacity-0"
         } ${isHovered ? "w-2 h-2" : "w-1.5 h-1.5"}`}
       />
-      {/* Outer Follower Ring */}
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 pointer-events-none z-[999998] -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/60 transition-all duration-300 ease-out hidden md:block ${
+        aria-hidden="true"
+        className={`fixed top-0 left-0 pointer-events-none z-[999998] -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/60 transition-all duration-300 ease-out motion-reduce:transition-none ${
           isVisible ? "opacity-100" : "opacity-0"
         } ${
           isHovered

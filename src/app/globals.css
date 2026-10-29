@@ -1,74 +1,296 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Work+Sans:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════
+   Rooted Living — design tokens (mirror tailwind.config.ts)
+   Fonts: Cormorant Garamond + Hanken Grotesk via next/font
+   (--font-display, --font-body on <html>)
+   ═══════════════════════════════════════════════════════════ */
 :root {
-  --primary-gold: #c39663;
-  --gold-light: #d8ad7a;
-  --gold-dark: #a57947;
-  --bg-dark: #0f0708;
+  /* Core brand */
+  --color-forest: #0d5a46;
+  --color-forest-deep: #093f31;
+  --color-gold: #c39663;
+  --color-gold-light: #d8ad7a;
+  --color-gold-dark: #a57947;
+  --color-gold-pill: #c6a568;
+  --color-ink: #0a1a15;
+  --color-ivory: #f4efe6;
+  --color-ivory-soft: #f7f3eb;
+  --color-ivory-border: #e4ddd2;
+  --color-sage: #dde5dc;
+  --color-sage-muted: #c8d4c7;
+  --color-stone: #736b63;
+  --color-charcoal: #232323;
+  --color-navy: #152833;
+
+  /* near-black → ink (compat for existing --color-near-black usages) */
+  --color-near-black: var(--color-ink);
+
+  /* Legacy aliases */
+  --primary-gold: var(--color-gold);
+  --gold-light: var(--color-gold-light);
+  --gold-dark: var(--color-gold-dark);
+  --bg-dark: var(--color-ink);
   --bg-nero: #161616;
-  --bg-navy: #152833;
+  --bg-navy: var(--color-navy);
+
+  /*
+   * Font stacks: next/font injects --font-display / --font-body.
+   * Fallbacks keep text readable before the webfont swap.
+   */
+  --font-serif: var(--font-display), "Cormorant Garamond", Georgia, "Times New Roman",
+    serif;
+  --font-sans: var(--font-body), "Hanken Grotesk", system-ui, "Segoe UI", sans-serif;
+
+  --container-max: 80rem; /* 1280px */
+  --gutter: 1.5rem;
+  --gutter-lg: 3rem;
+  --section-y: 4.5rem;
+  --section-y-lg: 6.5rem;
+
+  --ease-morph: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-rooted: cubic-bezier(0.33, 1, 0.68, 1);
+  --duration-morph: 500ms;
+  --duration-reveal: 700ms;
+  --duration-rooted: 600ms;
+
+  /* Fluid type (shared with Tailwind fluid-* sizes) */
+  --text-fluid-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
+  --text-fluid-sm: clamp(0.875rem, 0.82rem + 0.25vw, 0.9375rem);
+  --text-fluid-base: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  --text-fluid-lg: clamp(1.125rem, 1rem + 0.55vw, 1.375rem);
+  --text-fluid-xl: clamp(1.375rem, 1.15rem + 1vw, 1.75rem);
+  --text-fluid-2xl: clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem);
+  --text-fluid-3xl: clamp(2.25rem, 1.6rem + 2.4vw, 3.5rem);
+  --text-fluid-4xl: clamp(2.75rem, 1.9rem + 3.2vw, 4.5rem);
 }
 
-html {
-  scroll-behavior: smooth;
-  background-color: var(--bg-dark);
-  color: #ffffff;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--color-ink);
+    color: var(--color-ivory);
+    font-family: var(--font-sans);
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    overflow-x: hidden;
+    background-color: var(--color-ink);
+    color: var(--color-ivory);
+    font-family: var(--font-sans);
+    font-size: var(--text-fluid-base);
+    line-height: 1.65;
+    min-height: 100%;
+  }
+
+  /* Visible keyboard focus — gold ring on dark/light surfaces */
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background-color: var(--color-gold);
+    color: var(--color-ink);
+  }
 }
 
-body {
-  overflow-x: hidden;
-  background-color: #0f0708;
-}
-
-/* Custom Scrollbar */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f0708;
+  background: var(--color-ink);
 }
 ::-webkit-scrollbar-thumb {
-  background: #c39663;
+  background: var(--color-gold);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #d8ad7a;
+  background: var(--color-gold-light);
 }
 
-/* Luxury Serif Typography */
-.font-serif {
-  font-family: 'Playfair Display', Georgia, serif;
+/* ── Typography helpers (compat: .font-serif / .font-sans still resolve) ── */
+.font-serif,
+.font-display {
+  font-family: var(--font-serif);
 }
 
 .font-sans {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-sans);
 }
 
-/* Luxury Gold Gradient Text */
+/* Gold accent utilities — do not use as body text on ivory */
 .text-gold-gradient {
   background: linear-gradient(135deg, #f3d4a0 0%, #c39663 50%, #9e713c 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gold {
-  color: #c39663;
+  color: var(--color-gold);
 }
 
 .bg-gold {
-  background-color: #c39663;
+  background-color: var(--color-gold);
 }
 
 .border-gold {
-  border-color: #c39663;
+  border-color: var(--color-gold);
 }
 
-/* 3D Perspective Card Flipper */
+@layer components {
+  /* Consistent content container */
+  .vanae-container {
+    width: 100%;
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  @media (min-width: 768px) {
+    .vanae-container {
+      padding-inline: var(--gutter-lg);
+    }
+  }
+
+  /* Section vertical rhythm */
+  .vanae-section {
+    padding-block: var(--section-y);
+  }
+
+  @media (min-width: 768px) {
+    .vanae-section {
+      padding-block: var(--section-y-lg);
+    }
+  }
+
+  /**
+   * Anchor targets clear the fixed / floating header.
+   * Compact pill height ≈ 68px + top offset; expanded header is taller.
+   */
+  #home,
+  #overview,
+  #amenities,
+  #floor-plans,
+  #location,
+  #gallery,
+  #enquiry,
+  #rooted-story-heading {
+    scroll-margin-top: 6.5rem;
+  }
+
+  @media (min-width: 768px) {
+    #home,
+    #overview,
+    #amenities,
+    #floor-plans,
+    #location,
+    #gallery,
+    #enquiry,
+    #rooted-story-heading {
+      scroll-margin-top: 7.5rem;
+    }
+  }
+
+  /**
+   * Contour-line motif — fine topographic lines inspired by valley contours.
+   * Low-contrast decorative layer; place on ::before or empty decorative node.
+   * Does not carry meaning; keep aria-hidden on hosts.
+   */
+  .motif-contour {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .motif-contour::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.14;
+    background-image: repeating-linear-gradient(
+        -12deg,
+        transparent 0,
+        transparent 11px,
+        color-mix(in srgb, var(--color-gold) 55%, transparent) 11px,
+        color-mix(in srgb, var(--color-gold) 55%, transparent) 12px
+      ),
+      repeating-linear-gradient(
+        18deg,
+        transparent 0,
+        transparent 17px,
+        color-mix(in srgb, var(--color-forest) 40%, transparent) 17px,
+        color-mix(in srgb, var(--color-forest) 40%, transparent) 18px
+      );
+    mix-blend-mode: soft-light;
+  }
+
+  .motif-contour > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Quiet sage panel surface */
+  .surface-sage {
+    background-color: var(--color-sage);
+    color: var(--color-ink);
+  }
+
+  .surface-ivory {
+    background-color: var(--color-ivory);
+    color: var(--color-charcoal);
+  }
+
+  .surface-ink {
+    background-color: var(--color-ink);
+    color: var(--color-ivory);
+  }
+
+  .surface-forest {
+    background-color: var(--color-forest);
+    color: var(--color-ivory);
+  }
+
+  /* Restrained gold hairline rule */
+  .rule-gold {
+    display: block;
+    height: 1px;
+    width: 100%;
+    max-width: 8rem;
+    border: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-gold),
+      transparent
+    );
+  }
+}
+
+/* 3D Perspective Card Flipper (legacy — keep working) */
 .perspective-1000 {
   perspective: 1000px;
   -webkit-perspective: 1000px;
@@ -88,11 +310,20 @@ body {
   transform: rotateY(180deg);
 }
 
-/* Signature Editorial Clip-Path Text Reveal */
+/**
+ * Editorial clip reveal — visible by default so content remains readable
+ * without JS. Opt into the hidden start state with .clip-text-line--prepare
+ * only when an animation will call .revealed.
+ */
 .clip-text-line {
+  clip-path: none;
+  opacity: 1;
+}
+
+.clip-text-line.clip-text-line--prepare:not(.revealed) {
   clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0% 100%);
-  transition: clip-path 1.1s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s ease;
   opacity: 0;
+  transition: clip-path 1.1s var(--ease-reveal), opacity 0.9s ease;
 }
 
 .clip-text-line.revealed {
@@ -100,7 +331,20 @@ body {
   opacity: 1;
 }
 
-/* Button Dual Arrow Animation */
+@media (prefers-reduced-motion: reduce) {
+  .clip-text-line,
+  .clip-text-line.clip-text-line--prepare {
+    clip-path: none;
+    opacity: 1;
+    transition: none;
+  }
+
+  .motif-contour::before {
+    opacity: 0.06;
+  }
+}
+
+/* Button Dual Arrow Animation (legacy) */
 .btn-hover-switch {
   position: relative;
   overflow: hidden;
@@ -125,6 +369,19 @@ body {
   transform: translateX(0);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .btn-hover-switch,
+  .btn-hover-switch .btn-arrow-1,
+  .btn-hover-switch .btn-arrow-2 {
+    transition: none;
+  }
+
+  .btn-hover-switch:hover .btn-arrow-1,
+  .btn-hover-switch:hover .btn-arrow-2 {
+    transform: none;
+  }
+}
+
 /* Custom Cursor */
 @media (hover: hover) and (pointer: fine) {
   .cursor-follower {
@@ -135,9 +392,13 @@ body {
     z-index: 999999;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                background-color 0.3s ease,
-                border-color 0.3s ease;
+    transition: width 0.3s var(--ease-reveal), height 0.3s var(--ease-reveal),
+      background-color 0.3s ease, border-color 0.3s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-follower {
+    transition: none;
   }
 }
