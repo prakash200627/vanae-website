@@ -1,22 +1,28 @@
 import { NextResponse } from "next/server";
+import { verifyAdminCredentials } from "@/lib/adminCredentials";
 import {
-  verifyAdminCredentials,
   createSessionToken,
   getSessionCookieOptions,
 } from "@/lib/auth";
-import { isRateLimited, recordAttempt, resetRateLimit } from "@/lib/rateLimit";
+import { getClientIp } from "@/lib/clientIp";
+import {
+  isRateLimited,
+  recordAttempt,
+  resetRateLimit,
+  RateLimitStoreError,
+} from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0].trim();
-  }
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) return realIp.trim();
-  return "127.0.0.1";
+function serviceUnavailable() {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "Service temporarily unavailable. Please try again later.",
+    },
+    { status: 503 }
+  );
 }
 
 export async function POST(request: Request) {
@@ -24,13 +30,23 @@ export async function POST(request: Request) {
     const ip = getClientIp(request);
     const rateKey = `admin_login_${ip}`;
 
-    // Rate limit: max 5 failed login attempts per 15 minutes per IP
-    const rateCheck = isRateLimited(rateKey, 5, 15 * 60 * 1000);
+    let rateCheck;
+    try {
+      // Rate limit: max 5 failed login attempts per 15 minutes per IP
+      rateCheck = await isRateLimited(rateKey, 5, 15 * 60 * 1000);
+    } catch (error) {
+      if (error instanceof RateLimitStoreError) {
+        return serviceUnavailable();
+      }
+      throw error;
+    }
+
     if (rateCheck.limited) {
       return NextResponse.json(
         {
           success: false,
-          message: "Too many login attempts. Please wait 15 minutes before trying again.",
+          message:
+            "Too many login attempts. Please wait 15 minutes before trying again.",
         },
         { status: 429 }
       );
@@ -41,8 +57,8 @@ export async function POST(request: Request) {
       typeof body.identifier === "string"
         ? body.identifier.trim()
         : typeof body.email === "string"
-        ? body.email.trim()
-        : "";
+          ? body.email.trim()
+          : "";
     const password = typeof body.password === "string" ? body.password : "";
 
     if (!identifier || !password) {
@@ -54,8 +70,14 @@ export async function POST(request: Request) {
 
     const isValid = await verifyAdminCredentials(identifier, password);
     if (!isValid) {
-      // Record a failed attempt only on incorrect credentials
-      recordAttempt(rateKey, 15 * 60 * 1000);
+      try {
+        await recordAttempt(rateKey, 15 * 60 * 1000);
+      } catch (error) {
+        if (error instanceof RateLimitStoreError) {
+          return serviceUnavailable();
+        }
+        throw error;
+      }
 
       return NextResponse.json(
         { success: false, message: "Invalid email or password." },
@@ -63,10 +85,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Reset rate limit on successful authentication
-    resetRateLimit(rateKey);
+    try {
+      await resetRateLimit(rateKey);
+    } catch (error) {
+      if (error instanceof RateLimitStoreError) {
+        return serviceUnavailable();
+      }
+      throw error;
+    }
 
     const token = await createSessionToken(identifier);
+    if (!token) {
+      console.error("Admin login aborted: session secret is not configured.");
+      return serviceUnavailable();
+    }
+
     const cookieOptions = getSessionCookieOptions();
 
     const response = NextResponse.json(

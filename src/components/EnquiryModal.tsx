@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, ArrowUpRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { gsap } from "gsap";
+import { MOTION, prefersReducedMotion } from "@/lib/motion";
 
 interface EnquiryModalProps {
   isOpen: boolean;
@@ -40,10 +42,13 @@ function publicErrorMessage(raw: string): string {
 export default function EnquiryModal({
   isOpen,
   onClose,
-  title = "Register your interest",
-  formTitle = "Register Your Interest",
+  title = "Enquire about Vanae",
+  formTitle = "Your enquiry",
   triggerRef,
 }: EnquiryModalProps) {
+  const isRegisterFlow = /register/i.test(`${title} ${formTitle}`);
+  const submitLabel = isRegisterFlow ? "Register interest" : "Send enquiry";
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -58,6 +63,7 @@ export default function EnquiryModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dialogRef = useRef<HTMLDivElement>(null);
+  const panelAnimRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
   const formId = useId();
@@ -66,6 +72,33 @@ export default function EnquiryModal({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen || !panelAnimRef.current || prefersReducedMotion()) return;
+    const backdrop = dialogRef.current?.querySelector("[data-enquiry-backdrop]");
+    const panel = panelAnimRef.current;
+    const ctx = gsap.context(() => {
+      if (backdrop) {
+        gsap.fromTo(
+          backdrop,
+          { opacity: 0 },
+          { opacity: 1, duration: MOTION.durationModal, ease: MOTION.ease }
+        );
+      }
+      gsap.fromTo(
+        panel,
+        { opacity: 0, y: 18, scale: 0.98 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: MOTION.durationModal + 0.05,
+          ease: MOTION.easeSoft,
+        }
+      );
+    });
+    return () => ctx.revert();
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -81,6 +114,7 @@ export default function EnquiryModal({
     // Portal renders outside <main>, so inert on main is safe.
     const backgroundTargets = [
       document.querySelector("main"),
+      document.querySelector('aside[aria-label="Contact"]'),
       document.querySelector('aside[aria-label="Floating quick actions"]'),
     ].filter((el): el is HTMLElement => el instanceof HTMLElement);
 
@@ -242,12 +276,14 @@ export default function EnquiryModal({
       className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6"
     >
       <div
+        data-enquiry-backdrop
         onClick={onClose}
         className="absolute inset-0 bg-forest-nearBlack/70 backdrop-blur-sm"
         aria-hidden="true"
       />
 
       <div
+        ref={panelAnimRef}
         onClick={(e) => e.stopPropagation()}
         className="relative z-10 w-full max-w-lg max-h-[92vh] overflow-y-auto bg-ivory-soft border border-ivory-border rounded-2xl p-6 sm:p-10 shadow-[0_25px_70px_rgba(0,0,0,0.35)] text-charcoal"
       >
@@ -282,7 +318,7 @@ export default function EnquiryModal({
             <div className="w-14 h-14 rounded-full bg-forest/10 border border-forest/30 flex items-center justify-center mx-auto text-forest">
               <CheckCircle2 className="w-8 h-8" aria-hidden="true" />
             </div>
-            <h3 className="font-serif text-2xl text-forest font-medium">
+            <h3 className="font-serif text-2xl text-forest font-normal">
               Enquiry received
             </h3>
             <p className="text-stone text-sm leading-relaxed max-w-sm mx-auto font-sans">
@@ -418,7 +454,7 @@ export default function EnquiryModal({
                 disabled={isSubmitting}
                 className="w-full inline-flex items-center justify-center space-x-2 min-h-[48px] px-8 py-3.5 rounded-full bg-gold hover:bg-forest text-luxury-black hover:text-ivory-soft font-medium text-xs tracking-[0.25em] uppercase transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-soft"
               >
-                <span>{isSubmitting ? "Sending…" : "Register interest"}</span>
+                <span>{isSubmitting ? "Sending…" : submitLabel}</span>
                 {!isSubmitting && <ArrowUpRight className="w-4 h-4 ml-1" aria-hidden="true" />}
               </button>
             </div>

@@ -1,32 +1,38 @@
-
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Enquiry from "@/models/Enquiry";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { getClientIp } from "@/lib/clientIp";
+import { checkRateLimit, RateLimitStoreError } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
-
-function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0].trim();
-  }
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) return realIp.trim();
-  return "127.0.0.1";
-}
 
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
 
-    // Rate limit: max 10 enquiries per 5 minutes per IP
-    const rateCheck = checkRateLimit(`enquiry_ip_${ip}`, 10, 5 * 60 * 1000);
+    let rateCheck;
+    try {
+      // Rate limit: max 10 enquiries per 5 minutes per IP
+      rateCheck = await checkRateLimit(`enquiry_ip_${ip}`, 10, 5 * 60 * 1000);
+    } catch (error) {
+      if (error instanceof RateLimitStoreError) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Service temporarily unavailable. Please try again later.",
+          },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
+
     if (!rateCheck.allowed) {
       return NextResponse.json(
         {
           success: false,
-          message: "Too many enquiries. Please wait a few minutes before trying again.",
+          message:
+            "Too many enquiries. Please wait a few minutes before trying again.",
         },
         { status: 429 }
       );
@@ -44,17 +50,11 @@ export async function POST(request: Request) {
 
     const fullName =
       typeof body.fullName === "string" ? body.fullName.trim() : "";
-    const phone =
-      typeof body.phone === "string" ? body.phone.trim() : "";
-    const email =
-      typeof body.email === "string" ? body.email.trim() : "";
+    const phone = typeof body.phone === "string" ? body.phone.trim() : "";
+    const email = typeof body.email === "string" ? body.email.trim() : "";
     const message =
       typeof body.message === "string" ? body.message.trim() : "";
-    const allowedSources = [
-      "enquiry",
-      "register-interest",
-      "contact",
-    ];
+    const allowedSources = ["enquiry", "register-interest", "contact"];
     const source = allowedSources.includes(body.source)
       ? body.source
       : "enquiry";

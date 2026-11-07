@@ -1,116 +1,211 @@
-interface RateLimitRecord {
-  timestamps: number[];
+import connectDB from "@/lib/mongodb";
+import RateLimit from "@/models/RateLimit";
+
+export class RateLimitStoreError extends Error {
+  constructor(message = "Rate limit store unavailable") {
+    super(message);
+    this.name = "RateLimitStoreError";
+  }
 }
 
-const rateLimitStore = new Map<string, RateLimitRecord>();
+type AdmitResult = {
+  allowed: boolean;
+  remaining: number;
+};
 
-// Cleanup stale records every 5 minutes
-const CLEANUP_INTERVAL = 5 * 60 * 1000;
-let lastCleanup = Date.now();
+type LimitedResult = {
+  limited: boolean;
+  remaining: number;
+};
 
-function cleanupStale(windowMs: number) {
-  const now = Date.now();
-  if (now - lastCleanup < CLEANUP_INTERVAL) return;
-  lastCleanup = now;
+function isDuplicateKeyError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: number }).code === 11000
+  );
+}
 
-  rateLimitStore.forEach((record, key) => {
-    record.timestamps = record.timestamps.filter(
-      (ts: number) => now - ts < windowMs
-    );
-    if (record.timestamps.length === 0) {
-      rateLimitStore.delete(key);
+async function withStore<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    await connectDB();
+    try {
+      return await operation();
+    } catch (error) {
+      // Concurrent upserts can race on the unique key — retry once.
+      if (isDuplicateKeyError(error)) {
+        return await operation();
+      }
+      throw error;
     }
+  } catch (error) {
+    if (error instanceof RateLimitStoreError) {
+      throw error;
+    }
+    throw new RateLimitStoreError();
+  }
+}
+
+/**
+ * Sliding-window check that records an attempt when under the limit.
+ * Uses a MongoDB aggregation pipeline update for atomic read-modify-write.
+ */
+export async function checkRateLimit(
+  key: string,
+  maxRequests: number,
+  windowMs: number
+): Promise<AdmitResult> {
+  return withStore(async () => {
+    const now = Date.now();
+    const windowStart = now - windowMs;
+    const expiresAt = new Date(now + windowMs);
+
+    const doc = await RateLimit.findOneAndUpdate(
+      { key },
+      [
+        {
+          $set: {
+            key: { $ifNull: ["$key", key] },
+            filtered: {
+              $filter: {
+                input: { $ifNull: ["$timestamps", []] },
+                as: "t",
+                cond: { $gt: ["$$t", windowStart] },
+              },
+            },
+          },
+        },
+        {
+          $set: {
+            underLimit: { $lt: [{ $size: "$filtered" }, maxRequests] },
+          },
+        },
+        {
+          $set: {
+            timestamps: {
+              $cond: [
+                "$underLimit",
+                { $concatArrays: ["$filtered", [now]] },
+                "$filtered",
+              ],
+            },
+            lastAdmit: {
+              $cond: ["$underLimit", now, { $ifNull: ["$lastAdmit", 0] }],
+            },
+            expiresAt,
+          },
+        },
+        {
+          $unset: ["filtered", "underLimit"],
+        },
+      ],
+      {
+        upsert: true,
+        new: true,
+      }
+    );
+
+    if (!doc) {
+      throw new RateLimitStoreError();
+    }
+
+    const allowed = doc.lastAdmit === now;
+    const remaining = Math.max(0, maxRequests - (doc.timestamps?.length ?? 0));
+
+    return { allowed, remaining };
   });
 }
 
 /**
- * Checks if a key is currently rate-limited and records an attempt.
- * Used for general API rate limiting (e.g. public enquiries).
+ * Checks whether a key is already at/over the limit without recording.
  */
-export function checkRateLimit(
-  key: string,
-  maxRequests: number,
-  windowMs: number
-): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  cleanupStale(windowMs);
-
-  let record = rateLimitStore.get(key);
-  if (!record) {
-    record = { timestamps: [] };
-    rateLimitStore.set(key, record);
-  }
-
-  // Filter timestamps within the current window
-  record.timestamps = record.timestamps.filter((ts) => now - ts < windowMs);
-
-  if (record.timestamps.length >= maxRequests) {
-    return {
-      allowed: false,
-      remaining: 0,
-    };
-  }
-
-  record.timestamps.push(now);
-  return {
-    allowed: true,
-    remaining: maxRequests - record.timestamps.length,
-  };
-}
-
-/**
- * Checks if a key has exceeded its maximum attempts without recording a new attempt.
- */
-export function isRateLimited(
+export async function isRateLimited(
   key: string,
   maxAttempts: number,
   windowMs: number
-): { limited: boolean; remaining: number } {
-  const now = Date.now();
-  cleanupStale(windowMs);
+): Promise<LimitedResult> {
+  return withStore(async () => {
+    const now = Date.now();
+    const windowStart = now - windowMs;
 
-  const record = rateLimitStore.get(key);
-  if (!record) {
-    return { limited: false, remaining: maxAttempts };
-  }
+    const doc = await RateLimit.findOne({ key }).lean();
+    if (!doc || !Array.isArray(doc.timestamps)) {
+      return { limited: false, remaining: maxAttempts };
+    }
 
-  record.timestamps = record.timestamps.filter((ts) => now - ts < windowMs);
+    const active = doc.timestamps.filter((ts: number) => ts > windowStart);
+    if (active.length >= maxAttempts) {
+      return { limited: true, remaining: 0 };
+    }
 
-  if (record.timestamps.length >= maxAttempts) {
-    return { limited: true, remaining: 0 };
-  }
-
-  return { limited: false, remaining: maxAttempts - record.timestamps.length };
+    return {
+      limited: false,
+      remaining: maxAttempts - active.length,
+    };
+  });
 }
 
 /**
- * Records a failed attempt for the specified key.
+ * Records a failed attempt for the specified key (always appends in-window).
  */
-export function recordAttempt(key: string, windowMs: number): number {
-  const now = Date.now();
-  cleanupStale(windowMs);
+export async function recordAttempt(
+  key: string,
+  windowMs: number
+): Promise<number> {
+  return withStore(async () => {
+    const now = Date.now();
+    const windowStart = now - windowMs;
+    const expiresAt = new Date(now + windowMs);
 
-  let record = rateLimitStore.get(key);
-  if (!record) {
-    record = { timestamps: [] };
-    rateLimitStore.set(key, record);
-  }
+    const doc = await RateLimit.findOneAndUpdate(
+      { key },
+      [
+        {
+          $set: {
+            key: { $ifNull: ["$key", key] },
+            timestamps: {
+              $concatArrays: [
+                {
+                  $filter: {
+                    input: { $ifNull: ["$timestamps", []] },
+                    as: "t",
+                    cond: { $gt: ["$$t", windowStart] },
+                  },
+                },
+                [now],
+              ],
+            },
+            lastAdmit: now,
+            expiresAt,
+          },
+        },
+      ],
+      { upsert: true, new: true }
+    );
 
-  record.timestamps = record.timestamps.filter((ts) => now - ts < windowMs);
-  record.timestamps.push(now);
-  return record.timestamps.length;
+    if (!doc) {
+      throw new RateLimitStoreError();
+    }
+
+    return doc.timestamps?.length ?? 0;
+  });
 }
 
 /**
  * Resets the rate limit / lockout for a specific key.
  */
-export function resetRateLimit(key: string): void {
-  rateLimitStore.delete(key);
+export async function resetRateLimit(key: string): Promise<void> {
+  return withStore(async () => {
+    await RateLimit.deleteOne({ key });
+  });
 }
 
 /**
- * Clears all rate limits in memory.
+ * Clears all rate limits (development lockout reset only).
  */
-export function clearAllRateLimits(): void {
-  rateLimitStore.clear();
+export async function clearAllRateLimits(): Promise<void> {
+  return withStore(async () => {
+    await RateLimit.deleteMany({});
+  });
 }

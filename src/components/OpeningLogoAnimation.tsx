@@ -20,6 +20,7 @@ export default function OpeningLogoAnimation() {
     document.body.style.overflow = "";
     if (typeof window !== "undefined") {
       gsap.set(["#main-navbar", "#hero-content"], { clearProps: "all" });
+      window.dispatchEvent(new CustomEvent("vanae:intro-complete"));
     }
     setIsRendered(false);
   };
@@ -186,7 +187,7 @@ export default function OpeningLogoAnimation() {
           {/* Actual VANAE Logo */}
           <div ref={logoWrapperRef} className="relative mb-6">
             <Image
-              src="/assets/vanae-logo.jpg"
+              src="/assets/icons/vanae-logo.jpg"
               alt="VANAE Residences"
               width={492}
               height={430}
@@ -206,7 +207,7 @@ export default function OpeningLogoAnimation() {
             ref={subtitleRef}
             className="font-sans text-[10px] sm:text-xs text-white/80 uppercase tracking-[0.35em] font-medium"
           >
-            Ultra-Luxury Bespoke Residences
+            The Art of Rooted Living
           </p>
         </div>
 

@@ -27,7 +27,7 @@ const bodyFont = Hanken_Grotesk({
 });
 
 /**
- * Metadata avoids unverified tower/floor/clubhouse/amenity counts.
+ * Metadata uses brochure-verified project facts.
  * Canonical host remains provisional until the production domain is confirmed.
  */
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     template: "%s | VANAE",
   },
   description:
-    "VANAE is a luxury residential address envisioned in Kollur, near ORR Exit 2, Hyderabad — where architecture and landscape are shaped as one story of rooted living.",
+    "VANAE — The Art of Rooted Living. 3 & 4 BHK residences across six towers at Kollur, by ORR Exit 2, Hyderabad — where architecture and landscape form one story.",
   alternates: {
     canonical: "/",
   },
@@ -48,13 +48,13 @@ export const metadata: Metadata = {
     locale: "en_IN",
     title: "VANAE | The Art of Rooted Living | Kollur, Hyderabad",
     description:
-      "Rooted living in Kollur, near ORR Exit 2, Hyderabad. Architecture and landscape, one story.",
+      "The Art of Rooted Living in Kollur, by ORR Exit 2, Hyderabad — architecture and landscape as one story.",
     images: [
       {
-        url: "/assets/images/hero-poster.jpg",
-        width: 1920,
-        height: 1080,
-        alt: "VANAE — Kollur, Hyderabad",
+        url: "/assets/renders/address-twin-towers-dusk-p9.jpg",
+        width: 2400,
+        height: 1544,
+        alt: "VANAE — The Art of Rooted Living, Kollur, Hyderabad",
       },
     ],
   },
@@ -62,17 +62,17 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "VANAE | The Art of Rooted Living | Kollur, Hyderabad",
     description:
-      "Rooted living in Kollur, near ORR Exit 2, Hyderabad. Architecture and landscape, one story.",
-    images: ["/assets/images/hero-poster.jpg"],
+      "The Art of Rooted Living in Kollur, by ORR Exit 2, Hyderabad — architecture and landscape as one story.",
+    images: ["/assets/renders/address-twin-towers-dusk-p9.jpg"],
   },
   robots: {
     index: true,
     follow: true,
   },
   icons: {
-    icon: [{ url: "/assets/logo.svg", type: "image/svg+xml" }],
-    shortcut: "/assets/logo.svg",
-    apple: "/assets/vanae-logo.jpg",
+    icon: [{ url: "/assets/icons/vanae-logo.jpg", type: "image/jpeg" }],
+    shortcut: "/assets/icons/vanae-logo.jpg",
+    apple: "/assets/icons/vanae-logo.jpg",
   },
 };
 

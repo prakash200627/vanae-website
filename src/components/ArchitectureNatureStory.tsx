@@ -1,8 +1,13 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { Play } from "lucide-react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { siteContent } from "@/data/siteContent";
+import { useSectionReveal } from "@/hooks/useSectionReveal";
+import { prefersReducedMotion } from "@/lib/motion";
 
 interface ArchitectureNatureStoryProps {
   onPlayVideo?: () => void;
@@ -10,25 +15,58 @@ interface ArchitectureNatureStoryProps {
 
 /**
  * Rooted Living story — three always-visible chapters in normal document flow.
- * No ScrollTrigger pin (avoids blank spacer regions). Rectangular media only.
+ * Optional restrained desktop parallax on chapter images only.
  */
 export default function ArchitectureNatureStory({
   onPlayVideo,
 }: ArchitectureNatureStoryProps) {
+  const sectionRef = useRef<HTMLElement>(null);
+  useSectionReveal(sectionRef);
   const story = siteContent.rootedStory;
   const chapters = story.panels;
 
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    if (window.matchMedia("(max-width: 767px)").matches) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+    const ctx = gsap.context(() => {
+      const frames = gsap.utils.toArray<HTMLElement>(
+        sectionRef.current?.querySelectorAll("[data-story-parallax]") ?? []
+      );
+      frames.forEach((frame) => {
+        gsap.to(frame, {
+          yPercent: 4,
+          ease: "none",
+          scrollTrigger: {
+            trigger: frame,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       className="relative bg-ink text-ivory overflow-hidden"
       aria-labelledby="rooted-story-heading"
     >
       <div className="vanae-container pt-12 pb-12 md:pt-16 md:pb-20">
         <header className="max-w-2xl mb-8 md:mb-10">
-          <p className="font-sans text-gold text-xs tracking-[0.28em] uppercase font-semibold mb-3">
+          <p
+            data-reveal="eyebrow"
+            className="font-sans text-gold text-xs tracking-[0.28em] uppercase font-semibold mb-3"
+          >
             {story.eyebrow}
           </p>
           <h2
+            data-reveal="heading"
             id="rooted-story-heading"
             className="font-serif text-fluid-2xl md:text-fluid-3xl text-ivory font-normal tracking-tight"
           >
@@ -55,18 +93,23 @@ export default function ArchitectureNatureStory({
                 >
                   <figure className="relative w-full max-w-lg mx-auto md:mx-0 md:max-w-none">
                     {showImage ? (
-                      <div className="relative aspect-[4/5] overflow-hidden rounded-none bg-forest/30">
+                      <div
+                        data-reveal="image"
+                        className="relative aspect-[4/5] overflow-hidden rounded-none bg-forest/30"
+                      >
                         <Image
+                          data-story-parallax
                           src={chapter.image}
                           alt={chapter.imageAlt}
                           fill
                           sizes="(max-width: 768px) 100vw, 50vw"
-                          className="object-cover object-center"
+                          className="object-cover object-center will-change-transform"
                           loading="lazy"
                         />
                       </div>
                     ) : (
                       <div
+                        data-reveal="image"
                         className="relative aspect-[4/5] overflow-hidden rounded-none bg-forest/50 border border-ivory/10 flex flex-col items-center justify-center text-center px-8"
                         role="img"
                         aria-label={`${chapter.title} image pending`}
@@ -84,16 +127,23 @@ export default function ArchitectureNatureStory({
                     reverse ? "md:order-1" : "md:order-2"
                   }`}
                 >
-                  <p className="font-sans text-[11px] tracking-[0.28em] text-gold uppercase mb-2">
+                  <p
+                    data-reveal="item"
+                    className="font-sans text-[11px] tracking-[0.28em] text-gold uppercase mb-2"
+                  >
                     {String(index + 1).padStart(2, "0")}
                   </p>
                   <h3
+                    data-reveal="item"
                     id={`story-chapter-${index + 1}`}
                     className="font-serif text-fluid-xl md:text-fluid-2xl text-ivory font-normal tracking-tight mb-3"
                   >
                     {chapter.title}
                   </h3>
-                  <p className="font-sans text-fluid-base text-ivory/75 leading-relaxed max-w-md">
+                  <p
+                    data-reveal="item"
+                    className="font-sans text-fluid-base text-ivory/75 leading-relaxed max-w-md"
+                  >
                     {chapter.body}
                   </p>
                 </div>
@@ -112,10 +162,6 @@ export default function ArchitectureNatureStory({
               <Play className="w-4 h-4" aria-hidden="true" />
               {story.videoCtaText}
             </button>
-            <p className="mt-4 font-sans text-[11px] text-ivory/45 max-w-sm leading-relaxed">
-              Film is an artist’s impression and may include AI-assisted
-              visualisation.
-            </p>
           </div>
         )}
       </div>

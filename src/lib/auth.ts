@@ -1,12 +1,8 @@
 export const SESSION_COOKIE_NAME = "vanae_admin_session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24; // 24 hours
 
-// Default fallback SHA-256 hash for 'VanaeAdmin@2026!'
-const DEFAULT_ADMIN_HASH =
-  "d126da2091af54a566c42b8d6a222f701cc636e93c42a2fe1c49798ba658054d";
-const DEFAULT_ADMIN_EMAIL = "admin@vanae.com";
-const DEFAULT_SESSION_SECRET =
-  "vanae_admin_session_secret_key_8492049182390123849120";
+/** Minimum length for ADMIN_SESSION_SECRET (UTF-8 code units). */
+const MIN_SESSION_SECRET_LENGTH = 32;
 
 function toBase64Url(bytes: Uint8Array): string {
   let binary = "";
@@ -30,21 +26,12 @@ function fromBase64Url(str: string): Uint8Array {
   return bytes;
 }
 
-export async function hashPassword(password: string): Promise<string> {
-  const enc = new TextEncoder();
-  const digestBuf = await crypto.subtle.digest("SHA-256", enc.encode(password));
-  return Array.from(new Uint8Array(digestBuf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+function getSessionSecret(): string | null {
+  const secret = process.env.ADMIN_SESSION_SECRET?.trim();
+  if (!secret || secret.length < MIN_SESSION_SECRET_LENGTH) {
+    return null;
   }
-  return diff === 0;
+  return secret;
 }
 
 async function getHmacKey(secret: string): Promise<CryptoKey> {
@@ -58,36 +45,18 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
   );
 }
 
-export async function verifyAdminCredentials(
-  identifier: string,
-  plainPassword: string
-): Promise<boolean> {
-  const configuredEmail =
-    process.env.ADMIN_EMAIL ||
-    process.env.ADMIN_USERNAME ||
-    DEFAULT_ADMIN_EMAIL;
-
-  const trimmedIdentifier = identifier.trim().toLowerCase();
-  const trimmedConfigured = configuredEmail.trim().toLowerCase();
-
-  if (trimmedIdentifier !== trimmedConfigured) {
-    return false;
+/**
+ * Creates a signed session token. Returns null if ADMIN_SESSION_SECRET is
+ * missing, empty, or below the minimum entropy length.
+ */
+export async function createSessionToken(
+  username: string
+): Promise<string | null> {
+  const secret = getSessionSecret();
+  if (!secret) {
+    return null;
   }
 
-  let expectedHash = DEFAULT_ADMIN_HASH;
-
-  if (process.env.ADMIN_PASSWORD_HASH) {
-    expectedHash = process.env.ADMIN_PASSWORD_HASH.trim().toLowerCase();
-  } else if (process.env.ADMIN_PASSWORD) {
-    expectedHash = await hashPassword(process.env.ADMIN_PASSWORD);
-  }
-
-  const inputHash = await hashPassword(plainPassword);
-  return constantTimeEqual(inputHash, expectedHash);
-}
-
-export async function createSessionToken(username: string): Promise<string> {
-  const secret = process.env.ADMIN_SESSION_SECRET || DEFAULT_SESSION_SECRET;
   const key = await getHmacKey(secret);
 
   const payload = {
@@ -116,6 +85,11 @@ export async function verifySessionToken(
     return { valid: false };
   }
 
+  const secret = getSessionSecret();
+  if (!secret) {
+    return { valid: false };
+  }
+
   const parts = token.split(".");
   if (parts.length !== 2) {
     return { valid: false };
@@ -124,7 +98,6 @@ export async function verifySessionToken(
   const [payloadB64, signatureB64] = parts;
 
   try {
-    const secret = process.env.ADMIN_SESSION_SECRET || DEFAULT_SESSION_SECRET;
     const key = await getHmacKey(secret);
 
     const enc = new TextEncoder();
@@ -146,6 +119,10 @@ export async function verifySessionToken(
     const payload = JSON.parse(dec.decode(payloadBytes));
 
     if (typeof payload.exp !== "number" || payload.exp < Date.now()) {
+      return { valid: false };
+    }
+
+    if (typeof payload.sub !== "string" || !payload.sub) {
       return { valid: false };
     }
 

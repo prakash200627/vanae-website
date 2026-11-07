@@ -25,6 +25,14 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       smoothWheel: true,
       wheelMultiplier: 1,
       touchMultiplier: 2,
+      // Nested overflow panels (e.g. Concierge transcript) must receive
+      // native wheel when marked with data-lenis-prevent*.
+      prevent: (node) =>
+        Boolean(
+          node.closest?.(
+            "[data-lenis-prevent], [data-lenis-prevent-wheel], [data-chatbot-conversation]"
+          )
+        ),
     });
 
     lenis.on("scroll", ScrollTrigger.update);

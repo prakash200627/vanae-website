@@ -40,9 +40,10 @@
    * Font stacks: next/font injects --font-display / --font-body.
    * Fallbacks keep text readable before the webfont swap.
    */
-  --font-serif: var(--font-display), "Cormorant Garamond", Georgia, "Times New Roman",
-    serif;
-  --font-sans: var(--font-body), "Hanken Grotesk", system-ui, "Segoe UI", sans-serif;
+  --font-serif: var(--font-display, "Cormorant Garamond"), "Cormorant Garamond", Georgia,
+    "Times New Roman", serif;
+  --font-sans: var(--font-body, "Hanken Grotesk"), "Hanken Grotesk", system-ui, "Segoe UI",
+    sans-serif;
 
   --container-max: 80rem; /* 1280px */
   --gutter: 1.5rem;

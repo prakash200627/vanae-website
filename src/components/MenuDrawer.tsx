@@ -10,7 +10,6 @@ import { siteContent } from "@/data/siteContent";
 interface MenuDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpenRegister: () => void;
   /** Element that opened the drawer — focus returns here on close. */
   triggerRef?: React.RefObject<HTMLButtonElement | null>;
 }
@@ -26,7 +25,6 @@ const FOCUSABLE_SELECTOR =
 export default function MenuDrawer({
   isOpen,
   onClose,
-  onOpenRegister,
   triggerRef,
 }: MenuDrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -55,6 +53,7 @@ export default function MenuDrawer({
 
     const backgroundTargets = [
       document.querySelector("main"),
+      document.querySelector('aside[aria-label="Contact"]'),
       document.querySelector('aside[aria-label="Floating quick actions"]'),
     ].filter((el): el is HTMLElement => el instanceof HTMLElement);
 
@@ -144,7 +143,7 @@ export default function MenuDrawer({
         isOpen
           ? "opacity-100 pointer-events-auto visible"
           : "opacity-0 pointer-events-none invisible"
-      } motion-safe:transition-opacity motion-safe:duration-reveal motion-safe:ease-reveal`}
+      } motion-safe:transition-opacity motion-safe:duration-500 motion-safe:ease-out`}
     >
       <div
         className="absolute inset-0 bg-ink motif-contour"
@@ -155,7 +154,11 @@ export default function MenuDrawer({
       </div>
 
       <div className="relative z-10 h-full max-h-[100dvh] overflow-hidden pointer-events-none">
-        <div className="h-full max-w-content mx-auto px-6 sm:px-10 md:px-16 py-5 sm:py-7 md:py-8 flex flex-col pointer-events-auto">
+        <div
+          className={`h-full max-w-content mx-auto px-6 sm:px-10 md:px-16 py-5 sm:py-7 md:py-8 flex flex-col pointer-events-auto motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out ${
+            isOpen ? "translate-y-0" : "-translate-y-3"
+          }`}
+        >
           <header className="shrink-0 flex items-start justify-between gap-4 mb-4 sm:mb-5">
             <Link
               href="#home"
@@ -193,33 +196,24 @@ export default function MenuDrawer({
             aria-label="Primary"
             className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-1"
           >
-            <ul className="list-none p-0 m-0 flex flex-col gap-0.5 sm:gap-1">
-              {navItems.map((item, index) => {
-                const number = String(index + 1).padStart(2, "0");
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={(event) => handleNavClick(event, item.href)}
-                      className="group flex items-baseline gap-4 sm:gap-6 md:gap-8 py-1.5 sm:py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-sm"
-                    >
-                      <span
-                        className="font-sans text-[11px] sm:text-xs tracking-[0.2em] text-gold tabular-nums shrink-0 w-7 sm:w-8"
-                        aria-hidden="true"
-                      >
-                        {number}
-                      </span>
-                      <span className="font-serif text-[clamp(1.5rem,4.2vh,3rem)] leading-none text-ivory group-hover:text-gold group-focus-visible:text-gold transition-colors duration-300 motion-reduce:transition-none tracking-wide">
-                        {item.label}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
+            <ul className="list-none p-0 m-0 flex flex-col gap-1.5 sm:gap-2">
+              {navItems.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={(event) => handleNavClick(event, item.href)}
+                    className="group block py-1.5 sm:py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink rounded-sm"
+                  >
+                    <span className="font-serif text-[clamp(1.5rem,4.2vh,3rem)] leading-none text-ivory group-hover:text-gold group-focus-visible:text-gold transition-colors duration-300 motion-reduce:transition-none tracking-wide">
+                      {item.label}
+                    </span>
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
 
-          <footer className="shrink-0 mt-4 sm:mt-5 pt-5 border-t border-ivory/10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+          <footer className="shrink-0 mt-4 sm:mt-5 pt-5 border-t border-ivory/10">
             <div className="space-y-1.5 max-w-sm">
               <p className="font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-gold/70">
                 Place
@@ -228,20 +222,9 @@ export default function MenuDrawer({
                 {siteContent.location.publicPlace}
               </p>
               <p className="font-sans text-xs text-ivory/40 leading-relaxed">
-                Contact details TO CONFIRM
+                {siteContent.location.siteAddress}
               </p>
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                window.setTimeout(() => onOpenRegister(), 40);
-              }}
-              className="inline-flex items-center justify-center self-start sm:self-auto min-h-[44px] px-6 sm:px-8 py-2.5 rounded-full bg-gold hover:bg-ivory text-ink font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-colors duration-300 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
-            >
-              Register interest
-            </button>
           </footer>
         </div>
       </div>

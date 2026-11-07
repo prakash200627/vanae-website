@@ -5,196 +5,240 @@ import Image from "next/image";
 import { Volume2, VolumeX } from "lucide-react";
 import { siteContent } from "@/data/siteContent";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-type HeroMediaMode = "pending" | "static" | "video";
-
-interface HeroSectionProps {
-  onOpenEnquiry?: () => void;
-}
+import { MOTION, prefersReducedMotion } from "@/lib/motion";
 
 /**
- * Prefer static poster when motion is reduced or the network is constrained.
+ * Full-viewport hero — looping film when motion is allowed (unmuted autoplay
+ * attempted, muted fallback + sound controls), otherwise the approved dusk still.
  */
-function resolveHeroMediaMode(): Exclude<HeroMediaMode, "pending"> {
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    return "static";
-  }
-
-  const connection = (
-    navigator as Navigator & {
-      connection?: { saveData?: boolean; effectiveType?: string };
-    }
-  ).connection;
-
-  if (connection?.saveData) return "static";
-
-  const type = connection?.effectiveType;
-  if (type === "slow-2g" || type === "2g") return "static";
-
-  return "video";
-}
-
-/**
- * Rooted Living hero — brand, one headline, one Enquire CTA, cinematic film.
- * Does not surface unverified project figures.
- */
-export default function HeroSection({ onOpenEnquiry }: HeroSectionProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+export default function HeroSection() {
+  const containerRef = useRef<HTMLElement>(null);
+  const mediaRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
-  const [mediaMode, setMediaMode] = useState<HeroMediaMode>("pending");
-  const [videoFailed, setVideoFailed] = useState(false);
+  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [useVideo, setUseVideo] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [soundControlVisible, setSoundControlVisible] = useState(false);
+
+  const { hero } = siteContent;
+  const imageSrc = hero.posterSrc;
+  const videoSrc = hero.videoSrc?.trim() ?? "";
+  const canAttemptVideo =
+    Boolean(videoSrc) && !reduceMotion && !videoFailed;
 
   useEffect(() => {
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const syncMotion = () => {
-      setReduceMotion(motionQuery.matches);
-      setMediaMode(resolveHeroMediaMode());
-    };
-    syncMotion();
-    motionQuery.addEventListener("change", syncMotion);
-
-    const connection = (
-      navigator as Navigator & {
-        connection?: EventTarget & {
-          saveData?: boolean;
-          effectiveType?: string;
-        };
+    const sync = () => {
+      const reduced = motionQuery.matches || prefersReducedMotion();
+      setReduceMotion(reduced);
+      if (reduced) {
+        setUseVideo(false);
+        setSoundControlVisible(false);
       }
-    ).connection;
-
-    const onConnectionChange = () => setMediaMode(resolveHeroMediaMode());
-    connection?.addEventListener?.("change", onConnectionChange);
-
-    return () => {
-      motionQuery.removeEventListener("change", syncMotion);
-      connection?.removeEventListener?.("change", onConnectionChange);
     };
+    sync();
+    motionQuery.addEventListener("change", sync);
+    return () => motionQuery.removeEventListener("change", sync);
   }, []);
 
-  const showVideo = mediaMode === "video" && !videoFailed;
-
   useEffect(() => {
-    if (reduceMotion) return;
+    if (!canAttemptVideo) {
+      setUseVideo(false);
+      setSoundControlVisible(false);
+      return;
+    }
 
-    gsap.registerPlugin(ScrollTrigger);
-
-    const ctx = gsap.context(() => {
-      if (contentRef.current) {
-        gsap.set(contentRef.current, { opacity: 1, y: 0 });
-      }
-
-      const mediaEl =
-        showVideo && videoRef.current
-          ? videoRef.current
-          : containerRef.current?.querySelector<HTMLElement>("[data-hero-poster]");
-
-      if (mediaEl) {
-        gsap.to(mediaEl, {
-          yPercent: 8,
-          ease: "none",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top top",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
-      }
-
-      if (contentRef.current) {
-        gsap.to(contentRef.current, {
-          y: 32,
-          opacity: 0.35,
-          ease: "none",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top top",
-            end: "55% top",
-            scrub: true,
-          },
-        });
-      }
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, [showVideo, mediaMode, reduceMotion]);
-
-  useEffect(() => {
-    if (!showVideo) return;
     const video = videoRef.current;
     if (!video) return;
 
-    const tryPlay = () => {
-      video.muted = true;
-      const playPromise = video.play();
-      if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch(() => {
-          // Autoplay blocked — poster remains visible underneath.
-        });
+    let cancelled = false;
+
+    const markReady = (muted: boolean) => {
+      if (cancelled) return;
+      setIsMuted(muted);
+      setSoundControlVisible(true);
+      setUseVideo(true);
+    };
+
+    const markFailed = () => {
+      if (cancelled) return;
+      setVideoFailed(true);
+      setUseVideo(false);
+      setSoundControlVisible(false);
+    };
+
+    const tryPlay = async () => {
+      if (cancelled) return;
+      video.playsInline = true;
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      video.loop = true;
+
+      // 1) Attempt unmuted autoplay (may be blocked by the browser).
+      try {
+        video.muted = false;
+        video.defaultMuted = false;
+        video.removeAttribute("muted");
+        await video.play();
+        if (!cancelled) markReady(false);
+        return;
+      } catch {
+        // fall through to muted autoplay
+      }
+
+      // 2) Fallback: muted autoplay + Enable Sound control.
+      try {
+        video.muted = true;
+        video.defaultMuted = true;
+        video.setAttribute("muted", "");
+        await video.play();
+        if (!cancelled) markReady(true);
+      } catch {
+        markFailed();
       }
     };
 
     if (video.readyState >= 2) {
-      tryPlay();
+      void tryPlay();
     } else {
-      video.addEventListener("loadeddata", tryPlay, { once: true });
+      video.addEventListener("loadeddata", () => void tryPlay(), { once: true });
+      video.addEventListener("canplay", () => void tryPlay(), { once: true });
     }
 
+    video.addEventListener("error", markFailed);
+    video.addEventListener("stalled", () => {
+      if (video.currentTime === 0 && video.paused) {
+        window.setTimeout(() => {
+          if (!cancelled && video.paused && video.currentTime === 0) {
+            markFailed();
+          }
+        }, 4000);
+      }
+    });
+
     return () => {
-      video.removeEventListener("loadeddata", tryPlay);
+      cancelled = true;
+      video.removeEventListener("error", markFailed);
       video.pause();
     };
-  }, [showVideo]);
+  }, [canAttemptVideo, videoSrc]);
+
+  // Keep control visible whenever the film is active; sync mute state from the element.
+  useEffect(() => {
+    if (!useVideo) return;
+    const video = videoRef.current;
+    if (!video) return;
+    setSoundControlVisible(true);
+    setIsMuted(video.muted);
+  }, [useVideo]);
+
+  useEffect(() => {
+    const media = mediaRef.current;
+    if (!media || reduceMotion || prefersReducedMotion() || useVideo) return;
+
+    gsap.set(media, { scale: 1, transformOrigin: "50% 50%" });
+    const tween = gsap.to(media, {
+      scale: 1.06,
+      duration: 28,
+      ease: "sine.inOut",
+      yoyo: true,
+      repeat: -1,
+    });
+
+    return () => {
+      tween.kill();
+      gsap.set(media, { clearProps: "transform" });
+    };
+  }, [reduceMotion, useVideo]);
+
+  useEffect(() => {
+    const headline = headlineRef.current;
+    if (!headline) return;
+
+    if (reduceMotion || prefersReducedMotion()) {
+      gsap.set(headline, { clearProps: "all" });
+      return;
+    }
+
+    gsap.set(headline, { opacity: 0, y: 22 });
+    const tween = gsap.to(headline, {
+      opacity: 1,
+      y: 0,
+      duration: MOTION.duration,
+      ease: MOTION.easeSoft,
+      delay: 0.15,
+    });
+
+    return () => {
+      tween.kill();
+    };
+  }, [reduceMotion]);
 
   const toggleMute = () => {
-    if (!videoRef.current) return;
-    videoRef.current.muted = !videoRef.current.muted;
-    setIsMuted(videoRef.current.muted);
-    if (!videoRef.current.paused) return;
-    void videoRef.current.play().catch(() => undefined);
+    const video = videoRef.current;
+    if (!video || !useVideo) return;
+    const nextMuted = !video.muted;
+    video.muted = nextMuted;
+    if (!nextMuted) {
+      video.volume = 1;
+      // Resume if the browser paused while muted-to-unmuted.
+      void video.play().catch(() => {
+        /* keep current frame; user can retry */
+      });
+    }
+    setIsMuted(nextMuted);
   };
-
-  const { hero, branding } = siteContent;
-  const posterSrc = hero.posterSrc;
 
   return (
     <section
       id="home"
       ref={containerRef}
-      className="relative w-full h-screen min-h-[640px] sm:min-h-[720px] overflow-hidden bg-ink flex items-center justify-center"
+      className="relative w-full h-[100svh] min-h-[640px] sm:min-h-[720px] overflow-hidden bg-ink"
       aria-label="Vanae hero"
     >
-      {/* Poster always painted first — fallback when video is off or fails */}
       <div
-        data-hero-poster
-        aria-hidden={showVideo ? true : undefined}
-        className="absolute inset-0 w-full h-full bg-cover bg-center origin-center"
-        style={{ backgroundImage: `url('${posterSrc}')` }}
-      />
+        ref={mediaRef}
+        data-hero-media
+        className="absolute inset-0 w-full h-full will-change-transform"
+      >
+        <Image
+          src={imageSrc}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className={`object-cover object-center transition-opacity duration-700 motion-reduce:transition-none ${
+            useVideo ? "opacity-0" : "opacity-100"
+          }`}
+        />
 
-      {showVideo && (
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          poster={posterSrc}
-          onError={() => setVideoFailed(true)}
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none origin-center"
-        >
-          <source src={hero.videoSrc} type="video/mp4" />
-        </video>
-      )}
+        {canAttemptVideo ? (
+          <video
+            ref={videoRef}
+            className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700 motion-reduce:transition-none ${
+              useVideo ? "opacity-100" : "opacity-0"
+            }`}
+            src={videoSrc}
+            poster={imageSrc}
+            autoPlay
+            loop
+            playsInline
+            preload="metadata"
+            controls={false}
+            disablePictureInPicture
+            disableRemotePlayback
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+        ) : null}
+      </div>
 
-      {/* Restrained dark wash for ivory text — does not crop or hide film edges */}
       <div
-        className="absolute inset-0 pointer-events-none bg-gradient-to-t from-ink via-ink/50 to-ink/45"
+        className="absolute inset-0 pointer-events-none bg-gradient-to-t from-ink via-ink/55 to-ink/25"
         aria-hidden="true"
       />
       <div
@@ -202,57 +246,41 @@ export default function HeroSection({ onOpenEnquiry }: HeroSectionProps) {
         aria-hidden="true"
       />
 
-      {showVideo && (
-        <button
-          type="button"
-          onClick={toggleMute}
-          aria-label={isMuted ? "Unmute video" : "Mute video"}
-          className="absolute bottom-24 left-6 md:bottom-28 md:left-12 z-20 w-11 h-11 min-h-[44px] min-w-[44px] rounded-full bg-ink/60 border border-ivory/25 hover:border-gold hover:bg-gold/15 backdrop-blur-md flex items-center justify-center text-ivory hover:text-gold transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-        >
-          {isMuted ? (
-            <VolumeX className="w-5 h-5" aria-hidden="true" />
-          ) : (
-            <Volume2 className="w-5 h-5" aria-hidden="true" />
-          )}
-        </button>
-      )}
+      {useVideo && soundControlVisible ? (
+        <div className="absolute bottom-6 left-4 sm:bottom-8 sm:left-8 z-20 pointer-events-auto">
+          <button
+            type="button"
+            onClick={toggleMute}
+            aria-pressed={!isMuted}
+            aria-label={isMuted ? "Unmute video" : "Mute video"}
+            title={isMuted ? "Unmute video" : "Mute video"}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gold/45 bg-forest/90 text-ivory shadow-[0_8px_24px_rgba(10,26,21,0.35)] backdrop-blur-sm transition-colors motion-reduce:transition-none hover:border-gold hover:bg-forest-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+          >
+            {isMuted ? (
+              <VolumeX className="h-4 w-4 text-gold" aria-hidden="true" />
+            ) : (
+              <Volume2 className="h-4 w-4 text-gold" aria-hidden="true" />
+            )}
+          </button>
+        </div>
+      ) : null}
 
       <div
         id="hero-content"
         ref={contentRef}
-        className="relative z-10 px-6 max-w-3xl mx-auto flex flex-col items-center text-center"
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center text-center px-6 sm:px-12 md:px-16 lg:px-20 pb-[12.5rem] sm:pb-[14rem] lg:pb-20 xl:pb-16 pointer-events-none"
       >
-        <div className="mb-8 md:mb-10 inline-flex items-center justify-center bg-forest rounded-xl px-3 py-1.5 md:px-3.5 md:py-2 border border-gold/40 shadow-md">
-          <Image
-            src={branding.logoLight}
-            alt={branding.name}
-            width={492}
-            height={430}
-            priority
-            className="h-10 sm:h-11 md:h-12 w-auto object-contain"
-          />
-        </div>
-
-        <h1 className="font-serif text-ivory text-fluid-2xl md:text-fluid-3xl font-normal tracking-wide max-w-2xl drop-shadow-[0_2px_24px_rgba(10,26,21,0.65)]">
+        <h1
+          ref={headlineRef}
+          className="pointer-events-auto font-serif font-normal text-ivory text-[clamp(1.875rem,1rem+3.4vw,4rem)] leading-[1.12] tracking-[0.01em] max-w-[12.5em] [text-wrap:balance] drop-shadow-[0_2px_28px_rgba(10,26,21,0.75)]"
+        >
           {hero.majorStatement}
         </h1>
 
-        {onOpenEnquiry && (
-          <button
-            type="button"
-            onClick={onOpenEnquiry}
-            aria-label="Enquire about Vanae"
-            className="mt-8 md:mt-10 inline-flex items-center justify-center min-h-[48px] px-8 py-3 rounded-full bg-gold hover:bg-ivory text-ink font-sans font-semibold text-xs tracking-[0.2em] uppercase transition-colors duration-300 shadow-luxury focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
-          >
-            {hero.ctaText}
-          </button>
-        )}
+        <p className="pointer-events-none mt-4 sm:mt-5 max-w-md font-sans text-sm sm:text-base text-ivory/85 leading-relaxed tracking-wide drop-shadow-[0_1px_12px_rgba(10,26,21,0.7)]">
+          {hero.supportingCopy}
+        </p>
       </div>
-
-      {/* Legible disclosure — watermark must remain visible; do not crop to hide it */}
-      <p className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 w-[min(92vw,36rem)] text-center font-sans text-[10px] sm:text-[11px] leading-relaxed tracking-wide text-ivory/75 px-4">
-        {hero.impressionNote}
-      </p>
     </section>
   );
 }

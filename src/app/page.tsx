@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import IntroSection from "@/components/IntroSection";
 import ArchitectureNatureStory from "@/components/ArchitectureNatureStory";
-import AmenitiesSection from "@/components/AmenitiesSection";
+import LifestyleSection from "@/components/LifestyleSection";
 import FloorPlansSection from "@/components/FloorPlansSection";
 import GallerySection from "@/components/GallerySection";
 import EnquirySection from "@/components/EnquirySection";
@@ -15,14 +15,14 @@ import EnquiryModal from "@/components/EnquiryModal";
 import VideoModal from "@/components/VideoModal";
 import LightboxModal, { type LightboxItem } from "@/components/LightboxModal";
 import FloatingActions from "@/components/FloatingActions";
-
-import OpeningLogoAnimation from "@/components/OpeningLogoAnimation";
+import Chatbot from "@/components/chatbot/Chatbot";
 import { siteContent } from "@/data/siteContent";
 
 export default function Home() {
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
-  const [enquiryTitle, setEnquiryTitle] = useState("Register your interest");
-  const [enquiryFormTitle, setEnquiryFormTitle] = useState("Register Your Interest");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [enquiryTitle, setEnquiryTitle] = useState("Enquire about Vanae");
+  const [enquiryFormTitle, setEnquiryFormTitle] = useState("Your enquiry");
   const enquiryTriggerRef = useRef<HTMLButtonElement | null>(null);
   const floatingEnquiryRef = useRef<HTMLButtonElement>(null);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
@@ -31,14 +31,16 @@ export default function Home() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const lightboxTriggerRef = useRef<HTMLElement | null>(null);
 
-  const openRegister = (
-    title: string = "Register Your Interest",
-    trigger?: HTMLButtonElement | null
+  const openEnquiry = (
+    formTitle: string = "Your enquiry",
+    options?: { isRegister?: boolean; trigger?: HTMLButtonElement | null }
   ) => {
     enquiryTriggerRef.current =
-      trigger ?? floatingEnquiryRef.current ?? enquiryTriggerRef.current;
-    setEnquiryTitle("Register your interest");
-    setEnquiryFormTitle(title);
+      options?.trigger ?? floatingEnquiryRef.current ?? enquiryTriggerRef.current;
+    setEnquiryTitle(
+      options?.isRegister ? "Register your interest" : "Enquire about Vanae"
+    );
+    setEnquiryFormTitle(formTitle);
     setIsEnquiryOpen(true);
   };
 
@@ -54,32 +56,42 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-forest-nearBlack text-white">
-      <OpeningLogoAnimation />
+      <Navbar
+        onOpenRegister={() =>
+          openEnquiry("Register Now", { isRegister: true })
+        }
+      />
 
-      <Navbar onOpenRegister={() => openRegister("Register Now")} />
+      <HeroSection />
 
-      <HeroSection onOpenEnquiry={() => openRegister("Register Your Interest")} />
-
-      <IntroSection onOpenBrochure={() => openRegister("Register Interest")} />
+      <IntroSection />
 
       <ArchitectureNatureStory onPlayVideo={() => setIsVideoOpen(true)} />
 
-      <AmenitiesSection onOpenAmenities={() => openRegister("Amenities Enquiry")} />
-
-      <FloorPlansSection
-        onOpenPlans={() => openRegister("Request Floor Plans")}
-        onOpenLightbox={openLightbox}
+      <LifestyleSection
+        onOpenEnquire={() => openEnquiry("Amenities enquiry")}
       />
 
-      <GallerySection onOpenLightbox={openLightbox} />
-
-      <EnquirySection
-        onOpenEnquiry={(trigger) => openRegister("Enquiry", trigger)}
+      <FloorPlansSection
+        onOpenPlans={() => openEnquiry("Request floor plans")}
+        onOpenLightbox={openLightbox}
       />
 
       <LocationSection />
 
-      <Footer onOpenEnquiry={(trigger) => openRegister("Enquiry", trigger)} />
+      <GallerySection onOpenLightbox={openLightbox} />
+
+      <EnquirySection
+        onOpenEnquiry={(trigger) =>
+          openEnquiry("Your enquiry", { trigger })
+        }
+      />
+
+      <Footer
+        onOpenEnquiry={(trigger) =>
+          openEnquiry("Your enquiry", { trigger })
+        }
+      />
 
       <EnquiryModal
         isOpen={isEnquiryOpen}
@@ -105,10 +117,19 @@ export default function Home() {
 
       <FloatingActions
         onOpenEnquiry={() =>
-          openRegister("Register Your Interest", floatingEnquiryRef.current)
+          openEnquiry("Your enquiry", {
+            trigger: floatingEnquiryRef.current,
+          })
         }
         enquiryButtonRef={floatingEnquiryRef}
         isEnquiryOpen={isEnquiryOpen}
+        isChatOpen={isChatOpen}
+      />
+
+      <Chatbot
+        isEnquiryOpen={isEnquiryOpen}
+        open={isChatOpen}
+        onOpenChange={setIsChatOpen}
       />
     </main>
   );

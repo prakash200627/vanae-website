@@ -74,14 +74,14 @@ const config: Config = {
       fontFamily: {
         /** Display — Cormorant Garamond via next/font (--font-display) */
         serif: [
-          "var(--font-display)",
+          'var(--font-display, "Cormorant Garamond")',
           "Cormorant Garamond",
           "Georgia",
           "Times New Roman",
           "serif",
         ],
         display: [
-          "var(--font-display)",
+          'var(--font-display, "Cormorant Garamond")',
           "Cormorant Garamond",
           "Georgia",
           "Times New Roman",
@@ -89,7 +89,7 @@ const config: Config = {
         ],
         /** Body / UI — Hanken Grotesk via next/font (--font-body) */
         sans: [
-          "var(--font-body)",
+          'var(--font-body, "Hanken Grotesk")',
           "Hanken Grotesk",
           "system-ui",
           "Segoe UI",

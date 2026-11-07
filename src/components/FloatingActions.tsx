@@ -1,13 +1,17 @@
 "use client";
 
-import { FileText } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { MessageSquare } from "lucide-react";
+import { gsap } from "gsap";
 import { siteContent } from "@/data/siteContent";
+import { MOTION, prefersReducedMotion } from "@/lib/motion";
 
 interface FloatingActionsProps {
   onOpenEnquiry: () => void;
   enquiryButtonRef?: React.ComponentPropsWithRef<"button">["ref"];
-  /** When true, hide floating controls so they do not compete with the modal. */
   isEnquiryOpen?: boolean;
+  /** Shared Concierge open state — hide Enquire/WhatsApp while panel is open. */
+  isChatOpen?: boolean;
 }
 
 function buildWhatsAppHref(
@@ -18,6 +22,17 @@ function buildWhatsAppHref(
   if (!digits || digits.length < 8) return null;
   const text = encodeURIComponent(defaultMessage);
   return `https://wa.me/${digits}?text=${text}`;
+}
+
+function resolveWhatsAppHref(): string | null {
+  const waData = siteContent.whatsapp;
+  const configuredUrl = waData?.url?.trim();
+  if (configuredUrl) return configuredUrl;
+  return buildWhatsAppHref(
+    waData?.phoneNumber || "",
+    waData?.defaultMessage ||
+      "Hello, I would like to inquire about VANAE luxury residences."
+  );
 }
 
 function WhatsAppGlyph({ className }: { className?: string }) {
@@ -36,83 +51,132 @@ function WhatsAppGlyph({ className }: { className?: string }) {
   );
 }
 
+const controlClass =
+  "group pointer-events-auto inline-flex items-center gap-2.5 sm:gap-3 rounded-none bg-transparent border-0 p-0 focus-visible:outline-none";
+
+const iconClass =
+  "inline-flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border shadow-[0_8px_24px_rgba(10,26,21,0.35)] backdrop-blur-md transition-all duration-300 motion-reduce:transition-none group-focus-visible:ring-2 group-focus-visible:ring-gold group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-ink";
+
 /**
- * Floating Enquire + WhatsApp.
- * WhatsApp activates only when siteContent.whatsapp.phoneNumber yields a valid wa.me URL.
- * No invented numbers; empty config shows a disabled control so the channel is visible.
+ * Solid ivory pill + forest-deep type — readable on dark hero and light amenities.
+ * Never uses transparent dark text over either surface.
+ */
+const labelClass =
+  "hidden sm:inline order-first font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-semibold text-forest-deep bg-ivory rounded-full px-3.5 py-1.5 border border-ivory-border shadow-[0_4px_14px_rgba(10,26,21,0.18)] transition-colors duration-300 motion-reduce:transition-none group-hover:border-gold/50 group-hover:text-ink";
+
+/**
+ * Transparent floating contact dock (Enquire + WhatsApp).
+ * Concierge lives in Chatbot; both share open state from the page.
+ * Desktop: ivory pill labels + icons. Mobile: icons only.
  */
 export default function FloatingActions({
   onOpenEnquiry,
   enquiryButtonRef,
   isEnquiryOpen = false,
+  isChatOpen = false,
 }: FloatingActionsProps) {
-  const waData = siteContent.whatsapp;
-  const whatsappHref = buildWhatsAppHref(
-    waData?.phoneNumber || "",
-    waData?.defaultMessage ||
-    "Hello, I would like to inquire about VANAE luxury residences."
-  );
+  const rootRef = useRef<HTMLElement>(null);
+  const whatsappHref = resolveWhatsAppHref();
+  const dockHidden = isEnquiryOpen || isChatOpen;
 
-  if (isEnquiryOpen) {
-    return null;
-  }
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    if (dockHidden) {
+      el.setAttribute("inert", "");
+    } else {
+      el.removeAttribute("inert");
+    }
+  }, [dockHidden]);
+
+  useEffect(() => {
+    if (dockHidden || !rootRef.current || prefersReducedMotion()) return;
+
+    const ctx = gsap.context(() => {
+      const rows = rootRef.current?.querySelectorAll("[data-dock-item]");
+      if (!rows?.length) return;
+      gsap.fromTo(
+        rows,
+        { opacity: 0, y: 12 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: MOTION.durationFast,
+          ease: MOTION.ease,
+          stagger: 0.07,
+          delay: 0.25,
+        }
+      );
+    }, rootRef);
+
+    return () => ctx.revert();
+  }, [dockHidden]);
 
   return (
     <aside
-      aria-label="Floating quick actions"
-      className="fixed bottom-5 right-4 sm:bottom-7 sm:right-6 z-40 flex flex-col items-end gap-2.5 select-none pointer-events-none"
+      ref={rootRef}
+      aria-label="Contact"
+      aria-hidden={dockHidden ? true : undefined}
+      className={`fixed bottom-5 right-3 sm:bottom-7 sm:right-5 z-40 flex flex-col items-end gap-3 sm:gap-3.5 bg-transparent select-none transition-opacity duration-200 motion-reduce:transition-none ${
+        dockHidden
+          ? "opacity-0 pointer-events-none invisible"
+          : "opacity-100 pointer-events-none visible"
+      }`}
     >
-      <div className="flex items-center gap-2.5 pointer-events-auto">
-        <span className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-none bg-forest border border-gold/40 pointer-events-none">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-ivory-soft font-medium whitespace-nowrap font-sans">
-            Enquire
-          </span>
-        </span>
-
-        <button
-          ref={enquiryButtonRef}
-          type="button"
-          onClick={onOpenEnquiry}
-          aria-label="Open enquiry form"
-          aria-haspopup="dialog"
-          className="relative min-w-12 min-h-12 w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gold hover:bg-gold-dark flex items-center justify-center border border-white/50 transition-colors duration-300 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink cursor-pointer"
+      <button
+        data-dock-item
+        ref={enquiryButtonRef}
+        type="button"
+        onClick={onOpenEnquiry}
+        tabIndex={dockHidden ? -1 : undefined}
+        aria-label="Open enquiry form"
+        aria-haspopup="dialog"
+        disabled={dockHidden}
+        className={controlClass}
+      >
+        <span className={labelClass}>Enquire</span>
+        <span
+          className={`${iconClass} border-gold/60 bg-gold text-ink group-hover:bg-ivory group-hover:border-gold group-hover:shadow-[0_10px_28px_rgba(195,150,99,0.4)] group-active:scale-[0.97]`}
         >
-          <FileText
-            className="w-5 h-5 sm:w-6 sm:h-6 text-ink"
-            aria-hidden="true"
-          />
-        </button>
-      </div>
-
-      <div className="flex items-center gap-2.5 pointer-events-auto">
-        <span className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-none bg-forest border border-gold/40 pointer-events-none">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-ivory-soft font-medium whitespace-nowrap font-sans">
-            WhatsApp
-          </span>
+          <MessageSquare className="h-5 w-5" aria-hidden="true" />
         </span>
+      </button>
 
-        {whatsappHref ? (
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Chat on WhatsApp"
-            className="relative min-w-12 min-h-12 w-12 h-12 sm:w-14 sm:h-14 rounded-none bg-[#25D366] hover:bg-[#1ebe5d] text-white flex items-center justify-center border border-white/40 transition-colors duration-300 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2 focus-visible:ring-offset-ink cursor-pointer"
+      {whatsappHref ? (
+        <a
+          data-dock-item
+          href={whatsappHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          tabIndex={dockHidden ? -1 : undefined}
+          aria-label="Chat on WhatsApp"
+          className={controlClass}
+        >
+          <span className={labelClass}>WhatsApp</span>
+          <span
+            className={`${iconClass} border-forest/40 bg-forest text-ivory group-hover:bg-forest-deep group-hover:border-gold/50 group-hover:shadow-[0_10px_28px_rgba(13,90,70,0.45)] group-active:scale-[0.97]`}
           >
-            <WhatsAppGlyph className="w-6 h-6 sm:w-7 sm:h-7" />
-          </a>
-        ) : (
-          <button
-            type="button"
-            disabled
-            aria-label="Chat on WhatsApp — number pending confirmation"
-            title="WhatsApp number TO CONFIRM"
-            className="relative min-w-12 min-h-12 w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-[#25D366]/45 text-white/80 flex items-center justify-center border border-white/25 cursor-not-allowed opacity-70"
+            <WhatsAppGlyph className="h-5 w-5" />
+          </span>
+        </a>
+      ) : (
+        <button
+          data-dock-item
+          type="button"
+          disabled
+          tabIndex={-1}
+          aria-label="WhatsApp — use the enquiry form to reach us"
+          title="WhatsApp available once a number is published"
+          className={`${controlClass} opacity-55 cursor-not-allowed`}
+        >
+          <span className={labelClass}>WhatsApp</span>
+          <span
+            className={`${iconClass} border-forest/30 bg-forest/70 text-ivory/80`}
           >
-            <WhatsAppGlyph className="w-6 h-6 sm:w-7 sm:h-7" />
-          </button>
-        )}
-      </div>
+            <WhatsAppGlyph className="h-5 w-5" />
+          </span>
+        </button>
+      )}
     </aside>
   );
 }

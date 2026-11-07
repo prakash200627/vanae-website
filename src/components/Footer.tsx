@@ -9,8 +9,8 @@ interface FooterProps {
 }
 
 /**
- * Rooted Living footer — brand, seven nav anchors, enquiry action.
- * Contact channels stay pending until verified; no invented legal copy.
+ * Ink & Gold footer — brand, addresses, registration, copyright.
+ * Background #0A1A15 · text #F4EFE6 · accents #C39663.
  */
 export default function Footer({ onOpenEnquiry }: FooterProps) {
   const navLinks = siteContent.navigation;
@@ -19,49 +19,62 @@ export default function Footer({ onOpenEnquiry }: FooterProps) {
   const socials = siteContent.contact.socials.filter(
     (social) => Boolean(social.url?.trim())
   );
+  const { footer } = siteContent;
 
   return (
     <footer
       id="footer"
-      className="relative bg-ink text-ivory-soft border-t border-white/10 pb-28 sm:pb-24"
+      className="relative bg-[#0A1A15] text-[#F4EFE6] border-t border-white/10 pb-28 sm:pb-24"
     >
-      <div className="vanae-container pt-16 md:pt-20">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-10 pb-12 border-b border-white/10">
-          <div className="md:col-span-5 space-y-5">
+      <div className="vanae-container pt-16 md:pt-20 lg:pt-24">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-10 lg:gap-12 pb-12 md:pb-14 border-b border-white/10">
+          {/* Brand */}
+          <div className="md:col-span-4 lg:col-span-3 space-y-5">
             <Link
               href="#home"
-              className="inline-block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+              className="inline-block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C39663] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A1A15]"
               aria-label="VANAE — Home"
             >
-              <div className="inline-flex items-center justify-center bg-forest rounded-xl px-3 py-2 border border-gold/35">
+              <div className="inline-flex items-center justify-center bg-[#0D5A46] rounded-xl px-3 py-2 border border-[#C39663]/35">
                 <Image
                   src={siteContent.branding.logoLight}
-                  alt=""
+                  alt="VANAE"
                   width={492}
                   height={430}
                   className="h-12 w-auto object-contain"
                 />
               </div>
             </Link>
-            <p className="font-serif text-lg text-ivory-soft tracking-wide">
+            <p className="font-serif text-xl text-[#F4EFE6] tracking-wide">
               {siteContent.branding.name}
             </p>
-            <p className="font-sans text-sm text-ivory-soft/70 leading-relaxed max-w-sm">
-              {siteContent.location.publicPlace}
+            <p className="font-sans text-sm text-[#F4EFE6]/75 leading-relaxed max-w-sm">
+              {footer.brandDescription}
             </p>
+
+            {onOpenEnquiry && (
+              <button
+                type="button"
+                onClick={(event) => onOpenEnquiry(event.currentTarget)}
+                className="inline-flex items-center justify-center min-h-[44px] px-6 py-2.5 rounded-full border border-[#C39663]/55 text-[#C39663] hover:bg-[#C39663] hover:text-[#0A1A15] font-sans text-xs tracking-[0.18em] uppercase transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C39663] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A1A15]"
+              >
+                Enquire
+              </button>
+            )}
           </div>
 
-          <div className="md:col-span-4 space-y-4">
-            <span className="text-[11px] uppercase tracking-[0.25em] text-gold font-semibold block">
+          {/* Explore */}
+          <div className="md:col-span-3 lg:col-span-2 space-y-4">
+            <span className="text-[11px] uppercase tracking-[0.25em] text-[#C39663] font-semibold block">
               Explore
             </span>
             <nav aria-label="Footer navigation">
-              <ul className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <ul className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-0.5">
                 {navLinks.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="inline-block text-xs sm:text-sm text-ivory-soft/75 hover:text-gold transition-colors motion-reduce:transition-none py-1.5 font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-sm"
+                      className="inline-block text-xs sm:text-sm text-[#F4EFE6]/80 hover:text-[#C39663] transition-colors motion-reduce:transition-none py-1.5 font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C39663] rounded-sm"
                     >
                       {item.label}
                     </Link>
@@ -71,76 +84,105 @@ export default function Footer({ onOpenEnquiry }: FooterProps) {
             </nav>
           </div>
 
-          <div className="md:col-span-3 space-y-4">
-            <span className="text-[11px] uppercase tracking-[0.25em] text-gold font-semibold block">
-              Contact
-            </span>
-
-            {email ? (
-              <a
-                href={`mailto:${email}`}
-                className="block text-sm text-ivory-soft hover:text-gold transition-colors motion-reduce:transition-none font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-sm"
-              >
-                {email}
-              </a>
-            ) : (
-              <p className="text-xs text-ivory-soft/55 font-sans">
-                Sales email TO CONFIRM
+          {/* Addresses */}
+          <div className="md:col-span-5 lg:col-span-3 space-y-8">
+            <div className="space-y-3">
+              <span className="text-[11px] uppercase tracking-[0.25em] text-[#C39663] font-semibold block">
+                {footer.mainOfficeLabel}
+              </span>
+              <p className="font-sans text-sm text-[#F4EFE6]/80 leading-relaxed">
+                {footer.corporateAddress}
               </p>
-            )}
-
-            {phone ? (
-              <a
-                href={`tel:${phone.replace(/\s+/g, "")}`}
-                className="block text-sm text-ivory-soft hover:text-gold transition-colors motion-reduce:transition-none font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-sm"
-              >
-                {siteContent.contact.displayPhone || phone}
-              </a>
-            ) : (
-              <p className="text-xs text-ivory-soft/55 font-sans">
-                Phone TO CONFIRM
+            </div>
+            <div className="space-y-3">
+              <span className="text-[11px] uppercase tracking-[0.25em] text-[#C39663] font-semibold block">
+                Project site
+              </span>
+              <p className="font-sans text-sm text-[#F4EFE6]/80 leading-relaxed">
+                {footer.siteAddress}
               </p>
-            )}
+            </div>
+          </div>
 
-            <p className="text-xs text-ivory-soft/45 font-sans">
-              WhatsApp TO CONFIRM
-            </p>
-
-            {onOpenEnquiry && (
-              <button
-                type="button"
-                onClick={(event) => onOpenEnquiry(event.currentTarget)}
-                className="mt-1 inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-ink font-sans text-xs tracking-[0.18em] uppercase transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+          {/* Registration + contact channels */}
+          <div className="md:col-span-12 lg:col-span-4 min-w-0 space-y-8">
+            <section
+              className="space-y-3"
+              aria-labelledby="footer-registration-heading"
+            >
+              <h2
+                id="footer-registration-heading"
+                className="text-[11px] uppercase tracking-[0.25em] text-[#C39663] font-semibold"
               >
-                Enquire
-              </button>
-            )}
+                Registration
+              </h2>
+              <dl className="space-y-3 font-sans text-sm text-[#F4EFE6]/80">
+                <div>
+                  <dt className="text-[10px] uppercase tracking-[0.18em] text-[#F4EFE6]/45 mb-1">
+                    RERA No.
+                  </dt>
+                  <dd className="tracking-wide">{footer.reraNumber}</dd>
+                </div>
+                {footer.hmdaNumber ? (
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-[0.18em] text-[#F4EFE6]/45 mb-1">
+                      HMDA Application No.
+                    </dt>
+                    <dd className="whitespace-nowrap tabular-nums text-[12px] sm:text-sm lg:text-[13px] xl:text-sm tracking-normal">
+                      {footer.hmdaNumber}
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
+            </section>
 
-            <p className="text-[11px] text-ivory-soft/40 leading-relaxed pt-2 font-sans">
-              {siteContent.footer.reraNumber}
-            </p>
+            <div className="space-y-3">
+              <span className="text-[11px] uppercase tracking-[0.25em] text-[#C39663] font-semibold block">
+                Contact
+              </span>
+              {email ? (
+                <a
+                  href={`mailto:${email}`}
+                  className="block text-sm text-[#F4EFE6] hover:text-[#C39663] transition-colors motion-reduce:transition-none font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C39663] rounded-sm"
+                >
+                  {email}
+                </a>
+              ) : null}
+              {phone ? (
+                <a
+                  href={`tel:${phone.replace(/\s+/g, "")}`}
+                  className="block text-sm text-[#F4EFE6] hover:text-[#C39663] transition-colors motion-reduce:transition-none font-sans focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C39663] rounded-sm"
+                >
+                  {siteContent.contact.displayPhone || phone}
+                </a>
+              ) : (
+                <p className="text-sm text-[#F4EFE6]/65 font-sans">
+                  Reach us through the enquiry form
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[11px] text-ivory-soft/50 font-sans">
-          <p>{siteContent.footer.copyright}</p>
-          {socials.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-5">
-              {socials.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="uppercase tracking-wider hover:text-gold transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-sm"
-                >
-                  {social.short || social.name}
-                </a>
-              ))}
-            </div>
-          ) : (
-            <p className="text-ivory-soft/35">Social profiles TO CONFIRM</p>
-          )}
+        <div className="pt-8 md:pt-10 pb-2 flex flex-col gap-3 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[11px] text-[#F4EFE6]/45 font-sans">
+            <p>{footer.copyright}</p>
+            {socials.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-5">
+                {socials.map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="uppercase tracking-wider text-[#F4EFE6]/70 hover:text-[#C39663] transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C39663] rounded-sm"
+                  >
+                    {social.short || social.name}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </footer>

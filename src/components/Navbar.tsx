@@ -164,13 +164,10 @@ export default function Navbar({ onOpenRegister }: NavbarProps) {
               } ${
                 isCompact
                   ? "h-10 sm:h-11 min-h-[44px] px-3.5 sm:px-5 rounded-full bg-gold text-ink text-[11px] sm:text-xs border border-gold-dark/80 shadow-sm active:scale-[0.98] hover:bg-gold-dark"
-                  : "hidden sm:inline-flex min-h-[44px] px-6 py-2.5 rounded-full bg-gold hover:bg-ivory text-ink text-xs tracking-widest shadow-luxury border-0"
+                  : "inline-flex min-h-[44px] px-4 sm:px-6 py-2.5 rounded-full bg-gold hover:bg-ivory text-ink text-[11px] sm:text-xs tracking-widest shadow-luxury border-0"
               }`}
             >
-              <span className={isCompact ? "sm:hidden" : "hidden"}>ENQUIRE</span>
-              <span className={isCompact ? "hidden sm:inline" : "inline"}>
-                REGISTER NOW
-              </span>
+              REGISTER NOW
             </button>
 
             <button
@@ -220,7 +217,6 @@ export default function Navbar({ onOpenRegister }: NavbarProps) {
       <MenuDrawer
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
-        onOpenRegister={onOpenRegister}
         triggerRef={menuButtonRef}
       />
     </>

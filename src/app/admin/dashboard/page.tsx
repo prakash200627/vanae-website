@@ -242,11 +242,10 @@ export default function AdminDashboardPage() {
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                    active
-                      ? "bg-[#0D5A46] text-white"
-                      : "bg-[#FAF7F2] text-[#736B63] hover:text-[#232323] border border-[#EAE1D1]"
-                  }`}
+                  className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap ${active
+                    ? "bg-[#0D5A46] text-white"
+                    : "bg-[#FAF7F2] text-[#736B63] hover:text-[#232323] border border-[#EAE1D1]"
+                    }`}
                 >
                   {s}
                 </button>
@@ -373,13 +372,12 @@ export default function AdminDashboardPage() {
                           onChange={(e) =>
                             handleStatusChange(item._id, e.target.value)
                           }
-                          className={`text-xs px-2.5 py-1 rounded font-medium border outline-none cursor-pointer transition-colors ${
-                            item.status === "New"
-                              ? "bg-[#0D5A46]/10 text-[#0D5A46] border-[#0D5A46]/30"
-                              : item.status === "Contacted"
+                          className={`text-xs px-2.5 py-1 rounded font-medium border outline-none cursor-pointer transition-colors ${item.status === "New"
+                            ? "bg-[#0D5A46]/10 text-[#0D5A46] border-[#0D5A46]/30"
+                            : item.status === "Contacted"
                               ? "bg-amber-50 text-amber-800 border-amber-300"
                               : "bg-neutral-100 text-neutral-600 border-neutral-300"
-                          } disabled:opacity-50`}
+                            } disabled:opacity-50`}
                         >
                           <option value="New">New</option>
                           <option value="Contacted">Contacted</option>

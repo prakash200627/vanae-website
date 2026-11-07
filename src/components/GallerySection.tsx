@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { siteContent } from "@/data/siteContent";
+import { useSectionReveal } from "@/hooks/useSectionReveal";
 
 export type GalleryLightboxItem = {
   src: string;
@@ -20,10 +21,12 @@ interface GallerySectionProps {
 }
 
 /**
- * Rooted Living gallery — horizontal snap rail (≈3 cards on desktop).
- * Only approved items with src open the lightbox.
+ * Gallery — horizontal snap rail from renders/ + amenity-photos/.
+ * object-contain preserves portrait and landscape proportions.
  */
 export default function GallerySection({ onOpenLightbox }: GallerySectionProps) {
+  const sectionRef = useRef<HTMLElement>(null);
+  useSectionReveal(sectionRef);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const triggerRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [canPrev, setCanPrev] = useState(false);
@@ -70,16 +73,21 @@ export default function GallerySection({ onOpenLightbox }: GallerySectionProps) 
 
   return (
     <section
+      ref={sectionRef}
       id="gallery"
       className="bg-ivory text-charcoal overflow-x-hidden"
       aria-labelledby="gallery-heading"
     >
       <div className="vanae-container pt-12 pb-14 md:pt-14 md:pb-16">
         <header className="max-w-2xl mb-6 md:mb-8">
-          <span className="text-forest text-xs tracking-[0.28em] uppercase font-semibold block mb-3">
+          <span
+            data-reveal="eyebrow"
+            className="text-forest text-xs tracking-[0.28em] uppercase font-semibold block mb-3"
+          >
             {siteContent.gallery.tag}
           </span>
           <h2
+            data-reveal="heading"
             id="gallery-heading"
             className="font-serif text-fluid-2xl md:text-fluid-3xl text-charcoal font-normal tracking-tight"
           >
@@ -89,7 +97,10 @@ export default function GallerySection({ onOpenLightbox }: GallerySectionProps) 
               </span>
             ))}
           </h2>
-          <p className="mt-4 font-sans text-sm text-stone leading-relaxed">
+          <p
+            data-reveal="copy"
+            className="mt-4 font-sans text-sm text-stone leading-relaxed"
+          >
             {siteContent.gallery.approvalNote}
           </p>
         </header>
@@ -148,7 +159,8 @@ export default function GallerySection({ onOpenLightbox }: GallerySectionProps) 
                         event.currentTarget
                       )
                     }
-                    className="group relative block w-full aspect-[4/3] overflow-hidden rounded-none bg-sage/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ivory"
+                    data-reveal="image"
+                    className="group relative block w-full aspect-[4/3] overflow-hidden rounded-none bg-sage/35 border border-ivory-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ivory"
                     aria-label={`Open gallery image: ${item.title}`}
                   >
                     <Image
@@ -156,16 +168,13 @@ export default function GallerySection({ onOpenLightbox }: GallerySectionProps) 
                       alt={item.title}
                       fill
                       sizes="(max-width: 640px) 85vw, (max-width: 768px) 50vw, 33vw"
-                      className="object-cover"
+                      className="object-contain p-1 transition-transform duration-700 ease-out motion-safe:group-hover:scale-[1.02] motion-reduce:transition-none"
                       loading={index < 3 ? "eager" : "lazy"}
                       priority={index === 0}
                     />
-                    <span className="sr-only">
-                      {item.category ? `${item.category}. ` : ""}
-                      {item.title}
-                    </span>
                   </button>
                   <p className="mt-3 font-sans text-xs tracking-[0.16em] uppercase text-stone truncate">
+                    {item.category ? `${item.category} · ` : ""}
                     {item.title}
                   </p>
                 </div>
