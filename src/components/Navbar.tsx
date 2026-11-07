@@ -133,20 +133,22 @@ export default function Navbar({ onOpenRegister }: NavbarProps) {
                   : "rounded-xl px-2.5 py-1.5 md:px-3 md:py-2 border-gold/35 group-hover:border-gold"
               }`}
             >
-              <Image
-                src={siteContent.branding.logoLight}
-                alt={siteContent.branding.name}
-                width={492}
-                height={430}
-                priority
-                className={`w-auto object-contain ${
-                  reduceMotion ? "" : "transition-[height] duration-morph"
-                } ${
-                  isCompact
+              <span className="relative inline-flex overflow-hidden">
+                <Image
+                  src={siteContent.branding.logoLight}
+                  alt={siteContent.branding.name}
+                  width={492}
+                  height={430}
+                  priority
+                  className={`w-auto origin-center -translate-y-[3px] scale-[1.8] object-contain ${
+                    reduceMotion ? "" : "transition-[height] duration-morph"
+                  } ${
+                    isCompact
                     ? "h-7 sm:h-8 md:h-9"
                     : "h-9 sm:h-10 md:h-11"
-                }`}
-              />
+                  }`}
+                />
+              </span>
             </div>
           </Link>
 

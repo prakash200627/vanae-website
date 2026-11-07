@@ -17,6 +17,8 @@ export default function HeroSection() {
   const contentRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const resumeVideoOnReturnRef = useRef(false);
+  const playbackStartedRef = useRef(false);
 
   const [reduceMotion, setReduceMotion] = useState(false);
   const [useVideo, setUseVideo] = useState(false);
@@ -73,6 +75,16 @@ export default function HeroSection() {
 
     const tryPlay = async () => {
       if (cancelled) return;
+      const hero = containerRef.current;
+      const heroBounds = hero?.getBoundingClientRect();
+      if (
+        !heroBounds ||
+        heroBounds.bottom <= 0 ||
+        heroBounds.top >= window.innerHeight
+      ) {
+        return;
+      }
+      playbackStartedRef.current = true;
       video.playsInline = true;
       video.setAttribute("playsinline", "");
       video.setAttribute("webkit-playsinline", "");
@@ -126,6 +138,54 @@ export default function HeroSection() {
       video.pause();
     };
   }, [canAttemptVideo, videoSrc]);
+
+  useEffect(() => {
+    const hero = containerRef.current;
+    const video = videoRef.current;
+    if (!hero || !video || !canAttemptVideo) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          resumeVideoOnReturnRef.current = !video.paused;
+          video.pause();
+          return;
+        }
+
+        if (resumeVideoOnReturnRef.current) {
+          resumeVideoOnReturnRef.current = false;
+          void video.play().catch(() => {
+            // Keep the current frame if playback cannot resume automatically.
+          });
+          return;
+        }
+
+        // A deep-linked visitor may reach the hero after its initial load.
+        // Start that first playback muted so returning never surprises with audio.
+        if (!playbackStartedRef.current && video.readyState >= 2) {
+          playbackStartedRef.current = true;
+          video.muted = true;
+          video.defaultMuted = true;
+          video.setAttribute("muted", "");
+          void video.play().then(() => {
+            setIsMuted(true);
+            setSoundControlVisible(true);
+            setUseVideo(true);
+          }).catch(() => {
+            setVideoFailed(true);
+          });
+        }
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(hero);
+    return () => {
+      observer.disconnect();
+      resumeVideoOnReturnRef.current = false;
+      video.pause();
+    };
+  }, [canAttemptVideo]);
 
   // Keep control visible whenever the film is active; sync mute state from the element.
   useEffect(() => {

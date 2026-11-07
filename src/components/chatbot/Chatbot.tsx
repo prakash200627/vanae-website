@@ -267,13 +267,12 @@ export default function Chatbot({
           aria-labelledby={titleId}
           data-lenis-prevent
           data-lenis-prevent-wheel
-          className={`pointer-events-auto fixed z-40 flex w-[calc(100vw-1.5rem)] max-w-[26rem] flex-col overflow-hidden rounded-2xl border border-gold/40 bg-ivory-soft text-ink shadow-[0_28px_64px_rgba(10,26,21,0.42)] right-3 sm:right-5 motion-reduce:transition-none ${
-            reduce
-              ? "opacity-100"
-              : entered
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-3"
-          } motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out`}
+          className={`pointer-events-auto fixed z-40 flex w-[calc(100vw-1.5rem)] max-w-[26rem] flex-col overflow-hidden rounded-2xl border border-gold/40 bg-ivory-soft text-ink shadow-[0_28px_64px_rgba(10,26,21,0.42)] right-3 sm:right-5 motion-reduce:transition-none ${reduce
+            ? "opacity-100"
+            : entered
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-3"
+            } motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out`}
           style={panelStyle}
         >
           <header className="relative z-[1] flex flex-none shrink-0 items-start justify-between gap-3 bg-forest px-5 py-4 sm:px-6 sm:py-5 text-ivory">
@@ -293,7 +292,7 @@ export default function Chatbot({
                   className="inline-block h-1.5 w-1.5 rounded-full bg-gold"
                   aria-hidden="true"
                 />
-                Demo Assistant
+                AI Assistant
               </p>
             </div>
             <button
@@ -332,11 +331,10 @@ export default function Chatbot({
                   className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[90%] break-words rounded-2xl px-4 py-3 text-[13px] sm:text-sm leading-[1.65] font-sans whitespace-pre-wrap ${
-                      isUser
-                        ? "rounded-br-md bg-forest text-ivory shadow-[0_6px_18px_rgba(13,90,70,0.2)]"
-                        : "rounded-bl-md border border-ivory-border bg-ivory text-charcoal shadow-[0_4px_14px_rgba(10,26,21,0.05)]"
-                    }`}
+                    className={`max-w-[90%] break-words rounded-2xl px-4 py-3 text-[13px] sm:text-sm leading-[1.65] font-sans whitespace-pre-wrap ${isUser
+                      ? "rounded-br-md bg-forest text-ivory shadow-[0_6px_18px_rgba(13,90,70,0.2)]"
+                      : "rounded-bl-md border border-ivory-border bg-ivory text-charcoal shadow-[0_4px_14px_rgba(10,26,21,0.05)]"
+                      }`}
                   >
                     {!isUser ? (
                       <span className="sr-only">Assistant: </span>

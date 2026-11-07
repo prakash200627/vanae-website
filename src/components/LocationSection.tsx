@@ -2,41 +2,36 @@
 
 import { useRef } from "react";
 import { ExternalLink } from "lucide-react";
+import Image from "next/image";
 import { siteContent } from "@/data/siteContent";
 import { useSectionReveal } from "@/hooks/useSectionReveal";
 
-/**
- * Rooted Living location — client-verified Google Maps embed only.
- * No invented street addresses, distances, landmarks, or travel times.
- */
+/** VANAE location information and the approved Google Maps destination. */
 export default function LocationSection() {
   const sectionRef = useRef<HTMLElement>(null);
   useSectionReveal(sectionRef);
   const location = siteContent.location;
-  const showMap =
-    location.mapApproved === true && Boolean(location.embedMapUrl);
-  const openMapsUrl = location.openMapsUrl?.trim() || "";
 
   return (
     <section
       ref={sectionRef}
       id="location"
-      className="relative bg-ivory text-charcoal overflow-hidden"
+      className="relative overflow-hidden bg-ivory text-charcoal"
       aria-labelledby="location-heading"
     >
       <div className="vanae-container vanae-section">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
-          <div className="lg:col-span-5 space-y-5">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
+          <div className="space-y-6 lg:col-span-5">
             <p
               data-reveal="eyebrow"
-              className="text-forest font-sans font-semibold text-xs tracking-[0.28em] uppercase"
+              className="font-sans text-xs font-semibold uppercase tracking-[0.28em] text-forest"
             >
               {location.tag}
             </p>
             <h2
               data-reveal="heading"
               id="location-heading"
-              className="font-serif text-fluid-2xl md:text-fluid-3xl text-charcoal font-normal tracking-tight"
+              className="font-serif text-fluid-3xl font-normal leading-[1.08] tracking-tight text-charcoal md:text-fluid-4xl"
             >
               {location.headingLines.map((line) => (
                 <span key={line} className="block">
@@ -47,66 +42,52 @@ export default function LocationSection() {
 
             <p
               data-reveal="copy"
-              className="font-sans text-stone text-fluid-base leading-relaxed max-w-md"
+              className="max-w-lg font-sans text-base leading-[1.8] text-charcoal/80 sm:text-lg"
             >
               {location.copy}
             </p>
 
-            <div className="border-t border-ivory-border pt-5 space-y-4 max-w-md">
-              <p className="font-serif text-xl text-forest tracking-tight">
-                {location.publicPlace}
+            <div
+              data-reveal="copy"
+              className="max-w-lg border-t border-ivory-border pt-5"
+            >
+              <p className="mb-2 font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-forest">
+                Project address
               </p>
-              <p className="font-sans text-sm text-charcoal/80 leading-relaxed">
+              <address className="not-italic font-sans text-sm leading-[1.75] text-charcoal/80 sm:text-base">
                 {location.siteAddress}
-              </p>
-              <p className="font-sans text-xs text-stone/80 leading-relaxed uppercase tracking-[0.14em]">
-                {location.approvalNote}
-              </p>
+              </address>
             </div>
           </div>
 
-          <div className="lg:col-span-7">
-            {showMap ? (
-              <div data-reveal="image" className="space-y-3">
-                <div className="relative w-full aspect-[4/3] md:aspect-[16/10] overflow-hidden bg-sage/40 border border-ivory-border">
-                  <iframe
-                    title="Interactive map of Vanae Project on Google Maps"
-                    src={location.embedMapUrl}
-                    className="absolute inset-0 h-full w-full border-0"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    allowFullScreen
-                    allow="fullscreen"
-                  />
-                </div>
-                {openMapsUrl ? (
-                  <p>
-                    <a
-                      href={openMapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 min-h-[44px] font-sans text-xs tracking-[0.18em] uppercase text-forest hover:text-gold border-b border-forest/30 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ivory rounded-sm transition-colors"
-                    >
-                      Open in Google Maps
-                      <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
-                    </a>
-                  </p>
-                ) : null}
-              </div>
-            ) : (
-              <div
-                className="relative w-full aspect-[4/3] md:aspect-[16/10] overflow-hidden bg-sage/50 border border-ivory-border flex flex-col items-center justify-center px-8 text-center"
-                role="img"
-                aria-label="Map pending confirmation."
+          <div
+            data-reveal="image"
+            className="relative aspect-[4/3] overflow-hidden border border-ivory-border bg-forest shadow-[0_24px_54px_rgba(10,26,21,0.16)] sm:aspect-[3/2] lg:col-span-7"
+          >
+            <Image
+              src={location.mapImage}
+              alt={location.mapImageAlt}
+              fill
+              sizes="(max-width: 1024px) 100vw, 58vw"
+              className="object-cover object-center"
+            />
+            <div
+              className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-3 bg-gradient-to-t from-ink/85 via-ink/45 to-transparent px-5 pb-5 pt-16 sm:flex-row sm:items-end sm:justify-between sm:px-7 sm:pb-7"
+            >
+              <p className="font-serif text-lg leading-tight text-ivory sm:text-xl">
+                {location.publicPlace}
+              </p>
+              <a
+                href={location.openMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open VANAE directions in Google Maps"
+                className="relative inline-flex min-h-[48px] w-fit shrink-0 items-center justify-center gap-2 rounded-full border border-gold bg-gold px-6 py-3 font-sans text-xs font-semibold uppercase tracking-[0.18em] text-ink transition-colors hover:border-ivory hover:bg-ivory focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-forest motion-reduce:transition-none"
               >
-                <p className="font-serif text-fluid-lg text-forest tracking-tight mb-3">
-                  Map unavailable
-                </p>
-                <p className="font-sans text-xs text-stone leading-relaxed max-w-xs">
-                  {location.siteAddress}
-                </p>
-              </div>
-            )}
+                Open directions
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -13,10 +13,13 @@ export default function OpeningLogoAnimation() {
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const skipBtnRef = useRef<HTMLButtonElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const finishedRef = useRef(false);
 
   const [isRendered, setIsRendered] = useState(true);
 
   const finishAnimation = () => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
     document.body.style.overflow = "";
     if (typeof window !== "undefined") {
       gsap.set(["#main-navbar", "#hero-content"], { clearProps: "all" });
@@ -158,7 +161,7 @@ export default function OpeningLogoAnimation() {
   return (
     <div
       ref={wrapperRef}
-      className="fixed inset-0 z-[999999] pointer-events-none overflow-hidden select-none"
+      className="fixed inset-0 z-[999999] pointer-events-none overflow-hidden select-none motion-reduce:hidden"
       style={{
         perspective: "2000px",
         perspectiveOrigin: "50% 50%",
@@ -185,14 +188,18 @@ export default function OpeningLogoAnimation() {
         {/* Logo and Tagline Core Content (Kept exactly intact) */}
         <div className="relative z-10 flex flex-col items-center justify-center text-center px-6">
           {/* Actual VANAE Logo */}
-          <div ref={logoWrapperRef} className="relative mb-6">
+          <div
+            ref={logoWrapperRef}
+            className="relative mb-4"
+            style={{ opacity: 0, transform: "translateY(15px) scale(0.94)" }}
+          >
             <Image
               src="/assets/icons/vanae-logo.jpg"
               alt="VANAE Residences"
               width={492}
               height={430}
               priority
-              className="w-48 sm:w-60 md:w-72 h-auto object-contain pointer-events-none drop-shadow-[0_10px_25px_rgba(0,0,0,0.25)]"
+              className="h-auto max-h-[46svh] w-[min(86vw,15rem)] object-contain pointer-events-none drop-shadow-[0_10px_25px_rgba(0,0,0,0.25)] sm:w-[18.75rem] md:w-[22.5rem]"
             />
           </div>
 
@@ -200,14 +207,16 @@ export default function OpeningLogoAnimation() {
           <div
             ref={lineRef}
             className="h-[1.5px] bg-gradient-to-r from-transparent via-[#c39663] to-transparent mx-auto mb-4"
+            style={{ width: 0, opacity: 0 }}
           />
 
           {/* Subtle Luxury Caption */}
           <p
             ref={subtitleRef}
-            className="font-sans text-[10px] sm:text-xs text-white/80 uppercase tracking-[0.35em] font-medium"
+            className="text-center font-sans text-[10px] font-medium uppercase leading-relaxed tracking-[0.16em] text-white/80 sm:text-xs"
+            style={{ opacity: 0, transform: "translateY(10px)" }}
           >
-            The Art of Rooted Living
+            ULTRA-LUXURY BESPOKE RESIDENCES
           </p>
         </div>
 
@@ -217,6 +226,7 @@ export default function OpeningLogoAnimation() {
           onClick={handleSkip}
           className="absolute bottom-8 right-8 text-white/60 hover:text-white text-[10px] uppercase tracking-widest transition-colors font-sans py-2 px-3.5 rounded border border-white/20 hover:border-white/50 bg-black/30 backdrop-blur-sm cursor-pointer z-20"
           aria-label="Skip intro animation"
+          style={{ opacity: 0 }}
         >
           Skip
         </button>

@@ -204,18 +204,12 @@ export interface SiteContent {
     approvalNote: string;
     siteAddress: string;
     corporateAddress: string;
-    /**
-     * Location media — do not render until rights and suitability are confirmed.
-     * location-aerial.jpg duplicates bespoke-2; sky-terrace.jpg is a site plan, not a photo.
-     */
+    /** Approved illustrated VANAE route map used in the Location section. */
     mapImage: string;
     mapImageAlt: string;
     imageApproved: boolean;
-    /** Valid Google Maps embed URL (iframe src) — not the share/place URL. */
-    embedMapUrl: string;
-    /** Client-supplied place URL for “Open in Google Maps”. */
+    /** Exact client-supplied destination for Maps actions. */
     openMapsUrl: string;
-    mapApproved: boolean;
   };
   enquiry: {
     eyebrow: string;
@@ -680,40 +674,22 @@ export const siteContent: SiteContent = {
      */
     plans: [
       {
-        src: "/assets/floor-plans/Block%20A%204485%20Sft%20(east).png",
-        title: "4,485 SFT · Block A · East",
-        caption: "4,485 SFT · Block A · East",
-        width: 573,
-        height: 545,
+        src: "/assets/floor-plans/Block%20D%2C%20E%20%26%20F%201765%20Sft%20(east).png",
+        title: "1,765 SFT · Blocks D–F · East",
+        caption: "1,765 SFT · Blocks D, E & F · East",
+        width: 547,
+        height: 502,
         drawingApproved: true,
-        alt: "Unit floor plan drawing for 4,485 square feet, Block A, east orientation.",
+        alt: "Unit floor plan drawing for 1,765 square feet, Blocks D, E and F, east orientation.",
       },
       {
-        src: "/assets/floor-plans/Block%20A%204485%20Sft%20(west).png",
-        title: "4,485 SFT · Block A · West",
-        caption: "4,485 SFT · Block A · West",
-        width: 587,
-        height: 577,
+        src: "/assets/floor-plans/Block%20D%2C%20E%20%26%20F%201765%20Sft%20(west).png",
+        title: "1,765 SFT · Blocks D–F · West",
+        caption: "1,765 SFT · Blocks D, E & F · West",
+        width: 542,
+        height: 497,
         drawingApproved: true,
-        alt: "Unit floor plan drawing for 4,485 square feet, Block A, west orientation.",
-      },
-      {
-        src: "/assets/floor-plans/Block%20B%2CC%2CD%2CE%20%26%20F%202555%20Sft%20(east).png",
-        title: "2,555 SFT · Blocks B–F · East",
-        caption: "2,555 SFT · Blocks B, C, D, E & F · East",
-        width: 526,
-        height: 552,
-        drawingApproved: true,
-        alt: "Unit floor plan drawing for 2,555 square feet, Blocks B, C, D, E and F, east orientation.",
-      },
-      {
-        src: "/assets/floor-plans/Block%20B%2CC%2CD%2CE%20%26%20F%202555%20Sft%20(west).png",
-        title: "2,555 SFT · Blocks B–F · West",
-        caption: "2,555 SFT · Blocks B, C, D, E & F · West",
-        width: 516,
-        height: 566,
-        drawingApproved: true,
-        alt: "Unit floor plan drawing for 2,555 square feet, Blocks B, C, D, E and F, west orientation.",
+        alt: "Unit floor plan drawing for 1,765 square feet, Blocks D, E and F, west orientation.",
       },
       {
         src: "/assets/floor-plans/Block%20D%20%26%20E%202360%20Sft%20(east).png",
@@ -734,22 +710,40 @@ export const siteContent: SiteContent = {
         alt: "Unit floor plan drawing for 2,360 square feet, Blocks D and E, west orientation.",
       },
       {
-        src: "/assets/floor-plans/Block%20D%2C%20E%20%26%20F%201765%20Sft%20(east).png",
-        title: "1,765 SFT · Blocks D–F · East",
-        caption: "1,765 SFT · Blocks D, E & F · East",
-        width: 547,
-        height: 502,
+        src: "/assets/floor-plans/Block%20B%2CC%2CD%2CE%20%26%20F%202555%20Sft%20(east).png",
+        title: "2,555 SFT · Blocks B–F · East",
+        caption: "2,555 SFT · Blocks B, C, D, E & F · East",
+        width: 526,
+        height: 552,
         drawingApproved: true,
-        alt: "Unit floor plan drawing for 1,765 square feet, Blocks D, E and F, east orientation.",
+        alt: "Unit floor plan drawing for 2,555 square feet, Blocks B, C, D, E and F, east orientation.",
       },
       {
-        src: "/assets/floor-plans/Block%20D%2C%20E%20%26%20F%201765%20Sft%20(west).png",
-        title: "1,765 SFT · Blocks D–F · West",
-        caption: "1,765 SFT · Blocks D, E & F · West",
-        width: 542,
-        height: 497,
+        src: "/assets/floor-plans/Block%20B%2CC%2CD%2CE%20%26%20F%202555%20Sft%20(west).png",
+        title: "2,555 SFT · Blocks B–F · West",
+        caption: "2,555 SFT · Blocks B, C, D, E & F · West",
+        width: 516,
+        height: 566,
         drawingApproved: true,
-        alt: "Unit floor plan drawing for 1,765 square feet, Blocks D, E and F, west orientation.",
+        alt: "Unit floor plan drawing for 2,555 square feet, Blocks B, C, D, E and F, west orientation.",
+      },
+      {
+        src: "/assets/floor-plans/Block%20A%204485%20Sft%20(east).png",
+        title: "4,485 SFT · Block A · East",
+        caption: "4,485 SFT · Block A · East",
+        width: 573,
+        height: 545,
+        drawingApproved: true,
+        alt: "Unit floor plan drawing for 4,485 square feet, Block A, east orientation.",
+      },
+      {
+        src: "/assets/floor-plans/Block%20A%204485%20Sft%20(west).png",
+        title: "4,485 SFT · Block A · West",
+        caption: "4,485 SFT · Block A · West",
+        width: 587,
+        height: 577,
+        drawingApproved: true,
+        alt: "Unit floor plan drawing for 4,485 square feet, Block A, west orientation.",
       },
     ],
   },
@@ -911,8 +905,9 @@ export const siteContent: SiteContent = {
   location: {
     tag: "Location",
     headingLines: ["Kollur,", "Hyderabad."],
-    copy: "VANAE is at Kollur Exit 2 on the Nehru Outer Ring Road — Nagulapalli, Edulnagulapally, Hyderabad.",
-    publicPlace: "VANAE · Kollur Exit 2 · Hyderabad",
+    copy:
+      "",
+    publicPlace: "",
     approvalNote:
       "",
     siteAddress:
@@ -920,20 +915,14 @@ export const siteContent: SiteContent = {
     corporateAddress:
       "7D, 7th floor, Weave, My Scape Road, Financial District, Hyderabad, Telangana 500089, India.",
     /**
-     * sky-terrace.jpg is a site-plan graphic (not an aerial photograph).
-     * location-aerial.jpg duplicates bespoke-2.jpg and must not be used as an aerial.
+     * Supplied illustrated location map showing VANAE and the route at Kollur Exit 2.
      */
-    mapImage: "/assets/images/sky-terrace.jpg",
+    mapImage: "/assets/brand-art/vanae-location-map.jpg",
     mapImageAlt:
-      "Illustrative project site plan — not an aerial photograph.",
-    /** Not shown in Location; site-plan graphic removed from public Location section. */
-    imageApproved: false,
-    // Embed built from client place id + coords (share URL is not a valid iframe src).
-    embedMapUrl:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.5!2d78.2481326!3d17.4672276!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcbed62a8a370ab%3A0xc869eec4cda08cc3!2sVanae%20Project!5e0!3m2!1sen-IN!2sin!4v1730000000000!5m2!1sen-IN!2sin",
+      "Illustrated map showing VANAE at Kollur Exit 2 and nearby routes.",
+    imageApproved: true,
     openMapsUrl:
-      "https://www.google.com/maps/place/Vanae+Project/@17.462062,78.24976,15.61z/data=!4m6!3m5!1s0x3bcbed62a8a370ab:0xc869eec4cda08cc3!8m2!3d17.4672276!4d78.2481326!16s%2Fg%2F11zxtn9ry2?hl=en-IN",
-    mapApproved: true,
+      "https://maps.app.goo.gl/XbCLPuLVijcJeGreA?g_st=ic",
   },
   enquiry: {
     eyebrow: "Enquiry",
@@ -1077,9 +1066,9 @@ export const siteContent: SiteContent = {
     socials: [],
   },
   whatsapp: {
-    phoneNumber: "",
+    phoneNumber: "919908215553",
     defaultMessage: "Hello, I would like to inquire about VANAE luxury residences.",
-    url: "",
+    url: "https://wa.me/919908215553",
   },
   footer: {
     copyright: "© 2026 VANAE. All Rights Reserved.",

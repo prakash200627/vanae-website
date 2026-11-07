@@ -36,13 +36,15 @@ export default function Footer({ onOpenEnquiry }: FooterProps) {
               aria-label="VANAE — Home"
             >
               <div className="inline-flex items-center justify-center bg-[#0D5A46] rounded-xl px-3 py-2 border border-[#C39663]/35">
-                <Image
-                  src={siteContent.branding.logoLight}
-                  alt="VANAE"
-                  width={492}
-                  height={430}
-                  className="h-12 w-auto object-contain"
-                />
+                <span className="relative inline-flex overflow-hidden">
+                  <Image
+                    src={siteContent.branding.logoLight}
+                    alt="VANAE"
+                    width={492}
+                    height={430}
+                    className="h-[3.25rem] w-auto origin-center scale-[1.45] object-contain"
+                  />
+                </span>
               </div>
             </Link>
             <p className="font-serif text-xl text-[#F4EFE6] tracking-wide">

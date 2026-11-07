@@ -167,13 +167,15 @@ export default function MenuDrawer({
               aria-label="VANAE Home"
             >
               <div className="inline-flex items-center justify-center bg-forest rounded-xl px-2.5 py-1.5 border border-gold/35">
-                <Image
-                  src={siteContent.branding.logoLight}
-                  alt=""
-                  width={492}
-                  height={430}
-                  className="h-8 sm:h-9 md:h-10 w-auto object-contain"
-                />
+                <span className="relative inline-flex overflow-hidden">
+                  <Image
+                    src={siteContent.branding.logoLight}
+                    alt=""
+                    width={492}
+                    height={430}
+                    className="h-8 w-auto origin-center -translate-y-[3px] scale-[1.8] object-contain sm:h-9 md:h-10"
+                  />
+                </span>
               </div>
             </Link>
 

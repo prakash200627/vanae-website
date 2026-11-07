@@ -16,6 +16,7 @@ import VideoModal from "@/components/VideoModal";
 import LightboxModal, { type LightboxItem } from "@/components/LightboxModal";
 import FloatingActions from "@/components/FloatingActions";
 import Chatbot from "@/components/chatbot/Chatbot";
+import OpeningLogoAnimation from "@/components/OpeningLogoAnimation";
 import { siteContent } from "@/data/siteContent";
 
 export default function Home() {
@@ -56,6 +57,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-forest-nearBlack text-white">
+      <OpeningLogoAnimation />
+
       <Navbar
         onOpenRegister={() =>
           openEnquiry("Register Now", { isRegister: true })
