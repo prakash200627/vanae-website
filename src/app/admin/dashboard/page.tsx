@@ -11,6 +11,7 @@ interface EnquiryItem {
   message: string;
   source: "enquiry" | "register-interest" | "contact";
   status: "New" | "Contacted" | "Closed";
+  websiteSource?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +30,7 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [websiteFilter, setWebsiteFilter] = useState("All");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -43,6 +45,9 @@ export default function AdminDashboardPage() {
       }
       if (statusFilter !== "All") {
         params.set("status", statusFilter);
+      }
+      if (websiteFilter !== "All") {
+        params.set("website", websiteFilter);
       }
 
       const res = await fetch(`/api/admin/enquiries?${params.toString()}`);
@@ -69,7 +74,7 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, websiteFilter]);
 
   useEffect(() => {
     fetchEnquiries();
@@ -151,15 +156,20 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const getSourceLabel = (source: string) => {
-    switch (source) {
-      case "register-interest":
-        return "Register Interest";
-      case "contact":
-        return "Contact Section";
-      case "enquiry":
+  const getWebsiteLabel = (websiteSource?: string) => {
+    if (!websiteSource || !websiteSource.trim()) return "Unknown";
+    const src = websiteSource.trim().toLowerCase();
+    switch (src) {
+      case "vanae":
+        return "Vanae";
+      case "microsite-1":
+        return "Microsite 1";
+      case "microsite-2":
+        return "Microsite 2";
+      case "microsite-3":
+        return "Microsite 3";
       default:
-        return "Enquiry Modal";
+        return src;
     }
   };
 
@@ -252,6 +262,32 @@ export default function AdminDashboardPage() {
               );
             })}
 
+            <span className="text-xs text-[#736B63] ml-2 mr-1 hidden sm:inline">
+              Website:
+            </span>
+            {[
+              { label: "All Websites", val: "All" },
+              { label: "Vanae", val: "vanae" },
+              { label: "Microsite 1", val: "microsite-1" },
+              { label: "Microsite 2", val: "microsite-2" },
+              { label: "Microsite 3", val: "microsite-3" },
+              { label: "Unknown", val: "unknown" },
+            ].map(({ label, val }) => {
+              const active = websiteFilter === val;
+              return (
+                <button
+                  key={val}
+                  onClick={() => setWebsiteFilter(val)}
+                  className={`px-2.5 py-1.5 text-xs rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap ${active
+                    ? "bg-[#C6A568] text-white"
+                    : "bg-[#FAF7F2] text-[#736B63] hover:text-[#232323] border border-[#EAE1D1]"
+                    }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+
             <button
               onClick={() => fetchEnquiries()}
               className="px-3 py-1.5 text-xs text-[#736B63] hover:text-[#0D5A46] bg-[#FAF7F2] border border-[#EAE1D1] rounded-lg cursor-pointer ml-1"
@@ -289,7 +325,7 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-[#736B63]">
                 {searchTerm || statusFilter !== "All"
                   ? "Try adjusting your search criteria or status filter."
-                  : "New website enquiries will appear here in real-time."}
+                  : "Website enquiries will appear here."}
               </p>
             </div>
           ) : (
@@ -301,7 +337,7 @@ export default function AdminDashboardPage() {
                     <th className="py-3 px-4">Phone</th>
                     <th className="py-3 px-4">Email</th>
                     <th className="py-3 px-4 max-w-xs">Message / Context</th>
-                    <th className="py-3 px-4">Source</th>
+                    <th className="py-3 px-4">Website</th>
                     <th className="py-3 px-4 whitespace-nowrap">Submitted</th>
                     <th className="py-3 px-4">Status</th>
                   </tr>
@@ -345,17 +381,22 @@ export default function AdminDashboardPage() {
                       <td className="py-3.5 px-4 text-[#736B63] max-w-xs">
                         <span className="line-clamp-2" title={item.message}>
                           {item.message || (
-                            <span className="text-[#A49A8E] italic">
-                              No message provided
+                            <span className="text-[#A49A8E]">
+                              —
                             </span>
                           )}
                         </span>
                       </td>
 
-                      {/* Source */}
+                      {/* Website Source Tag */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-[#F0EBE1] text-[#44382D] border border-[#EAE1D1]">
-                          {getSourceLabel(item.source)}
+                        <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium border ${item.websiteSource?.toLowerCase() === "vanae"
+                          ? "bg-[#0D5A46]/10 text-[#0D5A46] border-[#0D5A46]/20"
+                          : item.websiteSource?.toLowerCase().startsWith("microsite")
+                            ? "bg-[#C6A568]/15 text-[#8C6D37] border-[#C6A568]/30"
+                            : "bg-[#F0EBE1] text-[#736B63] border-[#EAE1D1]"
+                          }`}>
+                          {getWebsiteLabel(item.websiteSource)}
                         </span>
                       </td>
 
@@ -395,7 +436,7 @@ export default function AdminDashboardPage() {
 
       {/* Subtle Footer */}
       <footer className="border-t border-[#EAE1D1] bg-white py-4 text-center text-xs text-[#736B63]">
-        VANAE Residences Administration Panel · Real-time MongoDB Atlas
+        VANAE Residences Administration Panel
       </footer>
     </div>
   );

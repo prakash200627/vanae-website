@@ -6,3 +6,4 @@ out/
 .env.*
 !.env.example
 .tmp-asset-preview/
+backups/

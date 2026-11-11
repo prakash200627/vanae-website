@@ -77,7 +77,7 @@ export default function AmenitiesSection({ onOpenAmenities }: AmenitiesSectionPr
 
   if (!categories.length) {
     return (
-      <section id="amenities" className="bg-ivory text-charcoal">
+      <section id="outdoor-amenities" className="bg-ivory text-charcoal">
         <div className="vanae-container vanae-section">
           <p className="font-sans text-stone">
             Outdoor amenities directory pending approved content.
@@ -90,7 +90,7 @@ export default function AmenitiesSection({ onOpenAmenities }: AmenitiesSectionPr
   return (
     <section
       ref={sectionRef}
-      id="amenities"
+      id="outdoor-amenities"
       className="relative bg-ivory text-charcoal overflow-hidden border-b border-ivory-border"
       aria-labelledby="amenities-heading"
     >

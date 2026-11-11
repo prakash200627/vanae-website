@@ -5,6 +5,11 @@ import { createPortal } from "react-dom";
 import { X, ArrowUpRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { gsap } from "gsap";
 import { MOTION, prefersReducedMotion } from "@/lib/motion";
+import {
+  isValidEmail,
+  isValidFullName,
+  normalizeIndianPhone,
+} from "@/lib/enquiryValidation";
 
 interface EnquiryModalProps {
   isOpen: boolean;
@@ -18,6 +23,7 @@ type FieldErrors = {
   name?: string;
   email?: string;
   phone?: string;
+  message?: string;
 };
 
 const FOCUSABLE_SELECTOR =
@@ -32,6 +38,7 @@ function publicErrorMessage(raw: string): string {
     lower.includes("required") ||
     lower.includes("valid email") ||
     lower.includes("too long") ||
+    lower.includes("1,000 characters") ||
     lower.includes("unable to submit")
   ) {
     return raw;
@@ -53,6 +60,7 @@ export default function EnquiryModal({
     name: "",
     email: "",
     phone: "",
+    message: "",
     website_trap: "",
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -175,20 +183,38 @@ export default function EnquiryModal({
     const trimmedEmail = formData.email.trim();
     const trimmedPhone = formData.phone.trim();
 
-    if (!trimmedName) errors.name = "Please enter your full name.";
-    else if (trimmedName.length > 100) errors.name = "Name is too long.";
-
-    if (!trimmedEmail) errors.email = "Please enter your email address.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      errors.email = "Please enter a valid email address.";
-    } else if (trimmedEmail.length > 254) {
-      errors.email = "Email is too long.";
+    // Name validation
+    if (!trimmedName) {
+      errors.name = "Please enter your full name.";
+    } else if (!isValidFullName(trimmedName)) {
+      // isValidFullName also checks length > 100 and numeric-only
+      if (trimmedName.length > 100) {
+        errors.name = "Name is too long.";
+      } else {
+        errors.name = "Please enter a valid full name.";
+      }
     }
 
-    if (!trimmedPhone || trimmedPhone.replace(/\D/g, "").length < 8) {
-      errors.phone = "Please enter a valid phone number.";
-    } else if (trimmedPhone.length > 30) {
-      errors.phone = "Phone number is too long.";
+    // Email validation
+    if (!trimmedEmail) {
+      errors.email = "Please enter your email address.";
+    } else if (trimmedEmail.length > 254) {
+      errors.email = "Email is too long.";
+    } else if (!isValidEmail(trimmedEmail)) {
+      errors.email = "Please enter a valid email address.";
+    }
+
+    // Indian phone validation
+    if (!trimmedPhone) {
+      errors.phone = "Please enter your mobile number.";
+    } else if (normalizeIndianPhone(trimmedPhone) === null) {
+      errors.phone = "Please enter a valid Indian mobile number.";
+    }
+
+    // Message validation (optional, max 1000 characters)
+    const trimmedMessage = formData.message.trim();
+    if (trimmedMessage.length > 1000) {
+      errors.message = "Message must be 1,000 characters or fewer.";
     }
 
     return errors;
@@ -219,9 +245,12 @@ export default function EnquiryModal({
         body: JSON.stringify({
           fullName: formData.name.trim(),
           email: formData.email.trim(),
-          phone: formData.phone.trim(),
-          message: formTitle || "",
+          phone:
+            normalizeIndianPhone(formData.phone.trim()) ??
+            formData.phone.trim(),
+          message: formData.message.trim(),
           source,
+          websiteSource: "vanae",
           website_trap: formData.website_trap,
         }),
       });
@@ -245,7 +274,7 @@ export default function EnquiryModal({
           data.message ||
           "Your enquiry has been submitted successfully.",
       });
-      setFormData({ name: "", email: "", phone: "", website_trap: "" });
+      setFormData({ name: "", email: "", phone: "", message: "", website_trap: "" });
       setFieldErrors({});
 
       window.setTimeout(() => {
@@ -273,62 +302,59 @@ export default function EnquiryModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="enquiry-modal-heading"
-      className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto"
     >
       <div
         data-enquiry-backdrop
         onClick={onClose}
-        className="absolute inset-0 bg-forest-nearBlack/70 backdrop-blur-sm"
+        className="fixed inset-0 bg-forest-nearBlack/70 backdrop-blur-sm"
         aria-hidden="true"
       />
 
       <div
         ref={panelAnimRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative z-10 w-full max-w-lg max-h-[92vh] overflow-y-auto bg-ivory-soft border border-ivory-border rounded-2xl p-6 sm:p-10 shadow-[0_25px_70px_rgba(0,0,0,0.35)] text-charcoal"
+        className="relative z-10 w-full max-w-lg my-auto bg-ivory-soft border border-ivory-border rounded-2xl p-5 sm:p-7 md:p-8 shadow-[0_25px_70px_rgba(0,0,0,0.35)] text-charcoal"
       >
         <button
           ref={closeButtonRef}
           type="button"
           onClick={onClose}
           aria-label="Close enquiry form"
-          className="absolute top-5 right-5 sm:top-6 sm:right-6 w-10 h-10 rounded-full border border-ivory-border bg-white/90 hover:bg-forest text-charcoal hover:text-ivory-soft flex items-center justify-center transition-colors shadow-sm z-20 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+          className="absolute top-4 right-4 sm:top-5 sm:right-5 w-9 h-9 rounded-full border border-ivory-border bg-white/90 hover:bg-forest text-charcoal hover:text-ivory-soft flex items-center justify-center transition-colors shadow-sm z-20 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
         >
-          <X className="w-5 h-5" aria-hidden="true" />
+          <X className="w-4 h-4" aria-hidden="true" />
         </button>
 
-        <div className="pr-10 mb-6 sm:mb-8">
-          <span className="text-[11px] uppercase tracking-[0.25em] text-gold-dark font-semibold block mb-2">
-            Enquiries
+        <div className="pr-10 mb-4 sm:mb-5">
+          <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-gold-dark font-semibold block mb-1">
+            VANAE RESIDENCES
           </span>
           <h2
             id="enquiry-modal-heading"
-            className="font-serif text-2xl sm:text-3xl text-charcoal font-normal tracking-tight leading-snug mb-2"
+            className="font-serif text-2xl sm:text-3xl text-charcoal font-normal tracking-tight leading-snug"
           >
             {title}
           </h2>
-          <p className="text-xs uppercase tracking-[0.2em] text-stone font-medium font-sans">
-            {formTitle}
-          </p>
-          <div className="h-px w-16 bg-gold/50 mt-4" aria-hidden="true" />
+          <div className="h-px w-12 sm:w-16 bg-gold/50 mt-2.5 sm:mt-3" aria-hidden="true" />
         </div>
 
         {status.type === "success" ? (
-          <div className="py-8 text-center space-y-4" role="status" aria-live="polite">
-            <div className="w-14 h-14 rounded-full bg-forest/10 border border-forest/30 flex items-center justify-center mx-auto text-forest">
-              <CheckCircle2 className="w-8 h-8" aria-hidden="true" />
+          <div className="py-6 text-center space-y-3" role="status" aria-live="polite">
+            <div className="w-12 h-12 rounded-full bg-forest/10 border border-forest/30 flex items-center justify-center mx-auto text-forest">
+              <CheckCircle2 className="w-7 h-7" aria-hidden="true" />
             </div>
-            <h3 className="font-serif text-2xl text-forest font-normal">
+            <h3 className="font-serif text-xl sm:text-2xl text-forest font-normal">
               Enquiry received
             </h3>
-            <p className="text-stone text-sm leading-relaxed max-w-sm mx-auto font-sans">
+            <p className="text-stone text-xs sm:text-sm leading-relaxed max-w-sm mx-auto font-sans">
               {status.message}
             </p>
           </div>
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="space-y-5"
+            className="space-y-3 sm:space-y-3.5"
             noValidate
             aria-busy={isSubmitting}
           >
@@ -350,7 +376,7 @@ export default function EnquiryModal({
             <div>
               <label
                 htmlFor={`${formId}-name`}
-                className="block text-xs uppercase tracking-wider text-stone mb-1.5 font-medium font-sans"
+                className="block text-[11px] sm:text-xs uppercase tracking-wider text-stone mb-1 font-medium font-sans"
               >
                 Full name <span className="text-gold-dark">*</span>
               </label>
@@ -369,10 +395,10 @@ export default function EnquiryModal({
                 disabled={isSubmitting}
                 aria-invalid={Boolean(fieldErrors.name)}
                 aria-describedby={fieldErrors.name ? `${formId}-name-error` : undefined}
-                className="w-full px-4 py-3 rounded-lg bg-white border border-ivory-border focus:border-gold focus:ring-1 focus:ring-gold/30 text-charcoal placeholder-stone/50 text-sm outline-none transition-all disabled:opacity-60"
+                className="w-full px-3.5 py-2 sm:py-2.5 rounded-lg bg-white border border-ivory-border focus:border-gold focus:ring-1 focus:ring-gold/30 text-charcoal placeholder-stone/50 text-xs sm:text-sm outline-none transition-all disabled:opacity-60"
               />
               {fieldErrors.name && (
-                <p id={`${formId}-name-error`} className="mt-1.5 text-xs text-rose-700 font-sans" role="alert">
+                <p id={`${formId}-name-error`} className="mt-1 text-[11px] sm:text-xs text-rose-700 font-sans" role="alert">
                   {fieldErrors.name}
                 </p>
               )}
@@ -381,7 +407,7 @@ export default function EnquiryModal({
             <div>
               <label
                 htmlFor={`${formId}-email`}
-                className="block text-xs uppercase tracking-wider text-stone mb-1.5 font-medium font-sans"
+                className="block text-[11px] sm:text-xs uppercase tracking-wider text-stone mb-1 font-medium font-sans"
               >
                 Email address <span className="text-gold-dark">*</span>
               </label>
@@ -399,10 +425,10 @@ export default function EnquiryModal({
                 disabled={isSubmitting}
                 aria-invalid={Boolean(fieldErrors.email)}
                 aria-describedby={fieldErrors.email ? `${formId}-email-error` : undefined}
-                className="w-full px-4 py-3 rounded-lg bg-white border border-ivory-border focus:border-gold focus:ring-1 focus:ring-gold/30 text-charcoal placeholder-stone/50 text-sm outline-none transition-all disabled:opacity-60"
+                className="w-full px-3.5 py-2 sm:py-2.5 rounded-lg bg-white border border-ivory-border focus:border-gold focus:ring-1 focus:ring-gold/30 text-charcoal placeholder-stone/50 text-xs sm:text-sm outline-none transition-all disabled:opacity-60"
               />
               {fieldErrors.email && (
-                <p id={`${formId}-email-error`} className="mt-1.5 text-xs text-rose-700 font-sans" role="alert">
+                <p id={`${formId}-email-error`} className="mt-1 text-[11px] sm:text-xs text-rose-700 font-sans" role="alert">
                   {fieldErrors.email}
                 </p>
               )}
@@ -411,7 +437,7 @@ export default function EnquiryModal({
             <div>
               <label
                 htmlFor={`${formId}-phone`}
-                className="block text-xs uppercase tracking-wider text-stone mb-1.5 font-medium font-sans"
+                className="block text-[11px] sm:text-xs uppercase tracking-wider text-stone mb-1 font-medium font-sans"
               >
                 Phone number <span className="text-gold-dark">*</span>
               </label>
@@ -429,18 +455,47 @@ export default function EnquiryModal({
                 disabled={isSubmitting}
                 aria-invalid={Boolean(fieldErrors.phone)}
                 aria-describedby={fieldErrors.phone ? `${formId}-phone-error` : undefined}
-                className="w-full px-4 py-3 rounded-lg bg-white border border-ivory-border focus:border-gold focus:ring-1 focus:ring-gold/30 text-charcoal placeholder-stone/50 text-sm outline-none transition-all disabled:opacity-60"
+                className="w-full px-3.5 py-2 sm:py-2.5 rounded-lg bg-white border border-ivory-border focus:border-gold focus:ring-1 focus:ring-gold/30 text-charcoal placeholder-stone/50 text-xs sm:text-sm outline-none transition-all disabled:opacity-60"
               />
               {fieldErrors.phone && (
-                <p id={`${formId}-phone-error`} className="mt-1.5 text-xs text-rose-700 font-sans" role="alert">
+                <p id={`${formId}-phone-error`} className="mt-1 text-[11px] sm:text-xs text-rose-700 font-sans" role="alert">
                   {fieldErrors.phone}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor={`${formId}-message`}
+                className="block text-[11px] sm:text-xs uppercase tracking-wider text-stone mb-1 font-medium font-sans"
+              >
+                Message <span className="text-stone/60 normal-case tracking-normal">(Optional)</span>
+              </label>
+              <textarea
+                id={`${formId}-message`}
+                name="message"
+                rows={2}
+                placeholder="Tell us what you're looking for or ask us a question..."
+                value={formData.message}
+                onChange={(e) => {
+                  setFormData({ ...formData, message: e.target.value });
+                  if (fieldErrors.message) setFieldErrors({ ...fieldErrors, message: undefined });
+                }}
+                disabled={isSubmitting}
+                aria-invalid={Boolean(fieldErrors.message)}
+                aria-describedby={fieldErrors.message ? `${formId}-message-error` : undefined}
+                className="w-full px-3.5 py-2 sm:py-2.5 rounded-lg bg-white border border-ivory-border focus:border-gold focus:ring-1 focus:ring-gold/30 text-charcoal placeholder-stone/50 text-xs sm:text-sm outline-none transition-all disabled:opacity-60 resize-y min-h-[58px] max-h-[120px]"
+              />
+              {fieldErrors.message && (
+                <p id={`${formId}-message-error`} className="mt-1 text-[11px] sm:text-xs text-rose-700 font-sans" role="alert">
+                  {fieldErrors.message}
                 </p>
               )}
             </div>
 
             {status.type === "error" && (
               <div
-                className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2.5 font-sans"
+                className="p-2.5 sm:p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2 font-sans"
                 role="alert"
               >
                 <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -448,20 +503,16 @@ export default function EnquiryModal({
               </div>
             )}
 
-            <div className="pt-2">
+            <div className="pt-1 sm:pt-1.5">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full inline-flex items-center justify-center space-x-2 min-h-[48px] px-8 py-3.5 rounded-full bg-gold hover:bg-forest text-luxury-black hover:text-ivory-soft font-medium text-xs tracking-[0.25em] uppercase transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-soft"
+                className="w-full inline-flex items-center justify-center space-x-2 min-h-[44px] sm:min-h-[46px] px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-gold hover:bg-forest text-luxury-black hover:text-ivory-soft font-medium text-xs tracking-[0.25em] uppercase transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-soft"
               >
                 <span>{isSubmitting ? "Sending…" : submitLabel}</span>
                 {!isSubmitting && <ArrowUpRight className="w-4 h-4 ml-1" aria-hidden="true" />}
               </button>
             </div>
-
-            <p className="text-[11px] text-stone/80 font-sans leading-relaxed pt-1">
-              By submitting, you agree to be contacted about VANAE residences.
-            </p>
           </form>
         )}
       </div>

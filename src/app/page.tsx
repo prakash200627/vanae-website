@@ -38,9 +38,7 @@ export default function Home() {
   ) => {
     enquiryTriggerRef.current =
       options?.trigger ?? floatingEnquiryRef.current ?? enquiryTriggerRef.current;
-    setEnquiryTitle(
-      options?.isRegister ? "Register your interest" : "Enquire about Vanae"
-    );
+    setEnquiryTitle("Enquire about Vanae");
     setEnquiryFormTitle(formTitle);
     setIsEnquiryOpen(true);
   };

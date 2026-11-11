@@ -365,7 +365,7 @@ export const siteContent: SiteContent = {
         imageApproved: true,
       },
     ],
-    videoCtaText: "Watch the film",
+    videoCtaText: "Watch the video",
   },
   architecture: {
     headingLines: ["WHERE THE FOREST", "ASCENDS."],
@@ -505,7 +505,7 @@ export const siteContent: SiteContent = {
   outdoorAmenities: {
     headingLines: ["Outdoor living,", "drawn across the grounds."],
     supportingCopy:
-      "Named outdoor spaces from the VANAE brochure — arrival, landscape, wellness, community, and open-air sport.",
+      "Named outdoor spaces across VANAE — arrival, landscape, wellness, community, and open-air sport.",
     approvalNote:
       "",
     bannerBtnText: "Enquire about amenities",
@@ -583,7 +583,7 @@ export const siteContent: SiteContent = {
     heading: "The Clubhouse",
     sizeLabel: "1,00,000 SFT",
     supportingCopy:
-      "Indoor clubhouse spaces named in the VANAE brochure — distinct from outdoor amenities, including the outdoor swimming pool.",
+      "Indoor clubhouse spaces across VANAE — distinct from outdoor amenities, including the outdoor swimming pool.",
     approvalNote:
       "",
     bannerBtnText: "Enquire about the clubhouse",
@@ -653,7 +653,7 @@ export const siteContent: SiteContent = {
   floorPlans: {
     headingLines: ["Plans drawn for", "how you live."],
     paragraphs: [
-      "Site master plan and unit layouts from the VANAE brochure, shown at their true aspect ratio.",
+      "Site master plan and unit layouts, shown at their true aspect ratio.",
       "Select any drawing to view it full size.",
     ],
     btnText: "Request floor plans",

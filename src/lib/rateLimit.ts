@@ -102,8 +102,9 @@ export async function checkRateLimit(
       ],
       {
         upsert: true,
-        new: true,
-      }
+        returnDocument: "after",
+        updatePipeline: true,
+      } as Parameters<typeof RateLimit.findOneAndUpdate>[2]
     );
 
     if (!doc) {
@@ -181,7 +182,11 @@ export async function recordAttempt(
           },
         },
       ],
-      { upsert: true, new: true }
+      {
+        upsert: true,
+        returnDocument: "after",
+        updatePipeline: true,
+      } as Parameters<typeof RateLimit.findOneAndUpdate>[2]
     );
 
     if (!doc) {

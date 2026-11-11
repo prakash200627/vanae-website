@@ -11,7 +11,6 @@ export default function OpeningLogoAnimation() {
   const logoWrapperRef = useRef<HTMLDivElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const skipBtnRef = useRef<HTMLButtonElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const finishedRef = useRef(false);
 
@@ -29,6 +28,14 @@ export default function OpeningLogoAnimation() {
   };
 
   useEffect(() => {
+    // Force scroll to top on homepage refresh/entry so the intro begins at position 0
+    if (typeof window !== "undefined") {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+      window.scrollTo(0, 0);
+    }
+
     const prefersReducedMotion =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -58,7 +65,6 @@ export default function OpeningLogoAnimation() {
       gsap.set(logoWrapperRef.current, { opacity: 0, scale: 0.94, y: 15 });
       gsap.set(lineRef.current, { width: 0, opacity: 0 });
       gsap.set(subtitleRef.current, { opacity: 0, y: 10 });
-      gsap.set(skipBtnRef.current, { opacity: 0 });
       if (lightingRef.current) gsap.set(lightingRef.current, { opacity: 0 });
 
       // Step 1: Allow current logo fade-up animation to complete
@@ -91,24 +97,8 @@ export default function OpeningLogoAnimation() {
           },
           "-=0.45"
         )
-        // Step 1d: Skip button subtle fade in
-        .to(
-          skipBtnRef.current,
-          {
-            opacity: 1,
-            duration: 0.35,
-            ease: "power2.out",
-          },
-          "-=0.3"
-        )
         // Step 2: Hold the completed logo screen briefly (0.6s)
-        .to({}, { duration: 0.6 })
-        // Fade skip button out right as transition begins
-        .to(skipBtnRef.current, {
-          opacity: 0,
-          duration: 0.2,
-          ease: "power2.out",
-        });
+        .to({}, { duration: 0.6 });
 
       // Step 3, 4, 6: Sophisticated 3D flip transition around vertical axis
       if (lightingRef.current) {
@@ -147,14 +137,6 @@ export default function OpeningLogoAnimation() {
       ctx.revert();
     };
   }, []);
-
-  // Immediate Skip handler
-  const handleSkip = () => {
-    if (tlRef.current) {
-      tlRef.current.kill();
-    }
-    finishAnimation();
-  };
 
   if (!isRendered) return null;
 
@@ -220,16 +202,6 @@ export default function OpeningLogoAnimation() {
           </p>
         </div>
 
-        {/* Skip button in bottom-right corner */}
-        <button
-          ref={skipBtnRef}
-          onClick={handleSkip}
-          className="absolute bottom-8 right-8 text-white/60 hover:text-white text-[10px] uppercase tracking-widest transition-colors font-sans py-2 px-3.5 rounded border border-white/20 hover:border-white/50 bg-black/30 backdrop-blur-sm cursor-pointer z-20"
-          aria-label="Skip intro animation"
-          style={{ opacity: 0 }}
-        >
-          Skip
-        </button>
       </div>
     </div>
   );

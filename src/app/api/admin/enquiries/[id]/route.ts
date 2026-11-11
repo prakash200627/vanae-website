@@ -55,7 +55,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const updated = await Enquiry.findByIdAndUpdate(
       id,
       { status },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!updated) {

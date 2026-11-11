@@ -25,7 +25,7 @@ const EnquirySchema = new Schema(
     message: {
       type: String,
       trim: true,
-      maxlength: 2000,
+      maxlength: 1000,
       default: "",
     },
     source: {
@@ -38,9 +38,19 @@ const EnquirySchema = new Schema(
       enum: ["New", "Contacted", "Closed"],
       default: "New",
     },
+    websiteSource: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      required: false,
+    },
   },
   { timestamps: true }
 );
+
+// Indexes for high-frequency dashboard queries and multi-website filtering
+EnquirySchema.index({ websiteSource: 1, createdAt: -1 });
+EnquirySchema.index({ status: 1, createdAt: -1 });
 
 export default models.Enquiry ||
   model("Enquiry", EnquirySchema);

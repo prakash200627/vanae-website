@@ -29,23 +29,47 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search")?.trim() || "";
     const status = searchParams.get("status")?.trim() || "All";
+    const website = searchParams.get("website")?.trim() || "All";
 
-    const query: Record<string, unknown> = {};
+    const conditions: Record<string, unknown>[] = [];
 
     if (status && status !== "All") {
       if (["New", "Contacted", "Closed"].includes(status)) {
-        query.status = status;
+        conditions.push({ status });
+      }
+    }
+
+    if (website && website !== "All") {
+      if (website === "unknown") {
+        conditions.push({
+          $or: [
+            { websiteSource: { $exists: false } },
+            { websiteSource: null },
+            { websiteSource: "" },
+          ],
+        });
+      } else {
+        conditions.push({ websiteSource: website });
       }
     }
 
     if (search) {
       const escaped = escapeRegex(search);
-      query.$or = [
-        { fullName: { $regex: escaped, $options: "i" } },
-        { phone: { $regex: escaped, $options: "i" } },
-        { email: { $regex: escaped, $options: "i" } },
-      ];
+      conditions.push({
+        $or: [
+          { fullName: { $regex: escaped, $options: "i" } },
+          { phone: { $regex: escaped, $options: "i" } },
+          { email: { $regex: escaped, $options: "i" } },
+        ],
+      });
     }
+
+    const query: Record<string, unknown> =
+      conditions.length === 0
+        ? {}
+        : conditions.length === 1
+        ? conditions[0]
+        : { $and: conditions };
 
     const [enquiries, totalCount, newCount] = await Promise.all([
       Enquiry.find(query).sort({ createdAt: -1 }).lean(),

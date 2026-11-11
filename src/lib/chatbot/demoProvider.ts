@@ -37,7 +37,7 @@ function outdoorAmenitySummary(): string {
   const groups = siteContent.outdoorAmenities.categories
     .map((cat) => `${cat.name}: ${cat.items.join(", ")}`)
     .join("\n");
-  return `Outdoor amenities from the brochure include:\n${groups}`;
+  return `Outdoor amenities across VANAE include:\n${groups}`;
 }
 
 function clubhouseSummary(): string {
@@ -45,7 +45,7 @@ function clubhouseSummary(): string {
   const groups = siteContent.clubhouse.categories
     .map((cat) => `${cat.name}: ${cat.items.join(", ")}`)
     .join("\n");
-  return `${siteContent.clubhouse.heading} is approximately ${size}. Indoor spaces from the brochure include:\n${groups}\n\nNote: the outdoor Swimming Pool is listed under outdoor amenities; the clubhouse lists a separate indoor Pool.`;
+  return `${siteContent.clubhouse.heading} is approximately ${size}. Indoor spaces across VANAE include:\n${groups}\n\nNote: the outdoor Swimming Pool is listed under outdoor amenities; the clubhouse lists a separate indoor Pool.`;
 }
 
 function floorPlanSummary(): string {
@@ -78,7 +78,7 @@ function registrationSummary(): string {
 }
 
 function greetingSummary(): string {
-  return `Welcome to Vanae. I’m here to help you explore the residences, amenities, floor plans and lifestyle. Ask a question or choose a suggestion below — I’ll share confirmed brochure details only. For personal assistance, use Enquire.`;
+  return `Welcome to Vanae. I’m here to help you explore the residences, amenities, floor plans and lifestyle. Ask a question or choose a suggestion below — I’ll share confirmed project details only. For personal assistance, use Enquire.`;
 }
 
 /**

@@ -107,7 +107,7 @@ export default function VideoModal({
 
       <div className="relative z-10 flex w-full max-w-5xl max-h-[min(80vh,100%)] aspect-video items-center justify-center bg-black overflow-hidden shadow-2xl border border-white/20">
         <h2 id={titleId} className="sr-only">
-          VANAE promotional film
+          VANAE architectural walkthrough
         </h2>
 
         <button
@@ -140,7 +140,7 @@ export default function VideoModal({
               onEnded={() => setShowPlayOverlay(true)}
               onError={() =>
                 setMediaError(
-                  "The film could not be loaded. Please try again later."
+                  "The video could not be loaded. Please try again later."
                 )
               }
             />
@@ -149,14 +149,14 @@ export default function VideoModal({
               <button
                 type="button"
                 onClick={() => void handlePlayClick()}
-                aria-label="Play film"
+                aria-label="Play video"
                 className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/35 text-ivory hover:bg-black/45 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset"
               >
                 <span className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-gold/70 bg-forest/90 text-ivory shadow-[0_8px_28px_rgba(10,26,21,0.45)]">
                   <Play className="h-7 w-7 ml-0.5" aria-hidden="true" />
                 </span>
                 <span className="font-sans text-[11px] uppercase tracking-[0.22em] text-ivory/90">
-                  Play film
+                  Play video
                 </span>
               </button>
             ) : null}
@@ -173,7 +173,7 @@ export default function VideoModal({
         ) : (
           <iframe
             src={videoUrl}
-            title="VANAE promotional film"
+            title="VANAE architectural walkthrough"
             className="w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

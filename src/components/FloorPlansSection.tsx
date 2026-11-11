@@ -62,7 +62,7 @@ export default function FloorPlansSection({
       {
         src: masterPlan.src,
         title: masterPlan.title,
-        caption: "Site layout · brochure drawing",
+        caption: "Site layout · architectural drawing",
         alt: masterPlan.alt,
         width: masterPlan.width,
         height: masterPlan.height,

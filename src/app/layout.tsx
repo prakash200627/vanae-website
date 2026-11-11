@@ -33,11 +33,23 @@ const bodyFont = Hanken_Grotesk({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
   title: {
-    default: "VANAE | The Art of Rooted Living | Kollur, Hyderabad",
-    template: "%s | VANAE",
+    default: "VANAE",
+    template: "%s | VANAE Kollur",
   },
   description:
-    "VANAE — The Art of Rooted Living. 3 & 4 BHK residences across six towers at Kollur, by ORR Exit 2, Hyderabad — where architecture and landscape form one story.",
+    "Explore VANAE: Premium 3 & 4 BHK gated community high-rise apartments in Kollur near Outer Ring Road Exit 2, Hyderabad. Luxury architecture, clubhouse, and rooted living.",
+  keywords: [
+    "new residential projects in Kollur",
+    "upcoming gated community projects Kollur",
+    "premium apartments for sale in Kollur",
+    "apartments near Outer Ring Road Kollur",
+    "residential properties near Kollur ORR",
+    "Kollur Hyderabad real estate projects",
+    "luxury high-rise apartments Kollur",
+    "3 BHK gated community apartments Kollur",
+    "premium 3 BHK flats Kollur price",
+    "top gated communities in Kollur Hyderabad",
+  ],
   alternates: {
     canonical: "/",
   },
@@ -46,23 +58,23 @@ export const metadata: Metadata = {
     url: "/",
     siteName: "VANAE",
     locale: "en_IN",
-    title: "VANAE | The Art of Rooted Living | Kollur, Hyderabad",
+    title: "VANAE | Luxury 3 & 4 BHK Apartments in Kollur, Hyderabad",
     description:
-      "The Art of Rooted Living in Kollur, by ORR Exit 2, Hyderabad — architecture and landscape as one story.",
+      "Premium 3 & 4 BHK gated community high-rise residences at Kollur, ORR Exit 2, Hyderabad — architecture and landscape as one story.",
     images: [
       {
         url: "/assets/renders/address-twin-towers-dusk-p9.jpg",
         width: 2400,
         height: 1544,
-        alt: "VANAE — The Art of Rooted Living, Kollur, Hyderabad",
+        alt: "VANAE — Luxury 3 & 4 BHK Apartments in Kollur, Hyderabad",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "VANAE | The Art of Rooted Living | Kollur, Hyderabad",
+    title: "VANAE | Luxury 3 & 4 BHK Apartments in Kollur, Hyderabad",
     description:
-      "The Art of Rooted Living in Kollur, by ORR Exit 2, Hyderabad — architecture and landscape as one story.",
+      "Premium 3 & 4 BHK gated community residences at Kollur, ORR Exit 2, Hyderabad.",
     images: ["/assets/renders/address-twin-towers-dusk-p9.jpg"],
   },
   robots: {
@@ -81,11 +93,41 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ApartmentComplex",
+    name: "VANAE",
+    url: SITE_ORIGIN,
+    description:
+      "Premium 3 & 4 BHK residences located at Kollur Exit 2, Nehru Outer Ring Road, Hyderabad.",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Kollur Exit 2, Nehru Outer Ring Road, Nagulapalli, Edulnagulapally",
+      addressLocality: "Kollur, Hyderabad",
+      addressRegion: "Telangana",
+      postalCode: "502300",
+      addressCountry: "IN",
+    },
+    amenityFeature: [
+      { "@type": "LocationFeatureSpecification", name: "The Clubhouse" },
+      { "@type": "LocationFeatureSpecification", name: "Curated Outdoor Amenities" },
+      { "@type": "LocationFeatureSpecification", name: "Biophilic Landscape" },
+      { "@type": "LocationFeatureSpecification", name: "Swimming Pool" },
+      { "@type": "LocationFeatureSpecification", name: "Super Gym & Fitness Studio" },
+    ],
+  };
+
   return (
     <html
       lang="en"
       className={`${displayFont.variable} ${bodyFont.variable}`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="antialiased bg-ink text-ivory font-sans selection:bg-gold selection:text-ink">
         <SmoothScroll>
           <CustomCursor />
